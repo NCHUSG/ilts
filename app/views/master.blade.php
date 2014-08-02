@@ -5,9 +5,12 @@
   <title>伊爾特會員系統</title>
 
 @section('head_css')
-  <link href="<?php echo asset('assets/bootstrap/3.0.3/css/bootstrap.min.css'); ?>" rel="stylesheet"/>
-  <link href="<?php echo asset('assets/font-awesome/4.0.3/css/font-awesome.min.css'); ?>" rel="stylesheet"/>
-  <link href="<?php echo asset('assets/css/bootstrap-social.css'); ?>" rel="stylesheet"/>
+  <link href="{{ asset('assets/bootstrap/3.0.3/css/bootstrap.min.css'); }}" rel="stylesheet"/>
+  <link href="{{ asset('assets/font-awesome/4.0.3/css/font-awesome.min.css'); }}" rel="stylesheet"/>
+  <link href="{{ asset('assets/css/bootstrap-social.css'); }}" rel="stylesheet"/>
+
+  <script src="{{ asset('assets/js/jquery.1.11.0.min.js'); }}"></script>
+  <script src="{{ asset('assets/bootstrap/3.0.3/js/bootstrap.min.js'); }}"></script>
   <style type="text/css">
     body
     {
@@ -39,8 +42,6 @@
     </div>
   </div>
 @section('footer_scripts')
-  <script src="<?php echo asset('assets/js/jquery.1.11.0.min.js'); ?>"></script>
-  <script src="<?php echo asset('assets/bootstrap/3.0.3/js/bootstrap.min.js'); ?>"></script>
 @show
 </body>
 </html>

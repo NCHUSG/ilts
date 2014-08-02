@@ -29,11 +29,6 @@ return array(
     |
     */
 
-    'providers' => array(
-        'Google',
-        'Facebook'
-    ),
-
     'authority' => array(
         'EMAIL',
         'DEVELOPER',

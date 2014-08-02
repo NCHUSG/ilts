@@ -25,7 +25,6 @@ Route::group(array('before' => 'guest_only'), function()
     Route::get('portal/o/{provider?}', array( 'uses' => 'PortalController@oauth',
                                               'as'   => 'provider'));
 
-
     # Filter：OAuth專區。只有已經被Provider認可且建立Seesion的使用者可以訪問的頁面
     Route::group(array('before' => 'oauth_only'), function()
     {

@@ -9,14 +9,14 @@
 - 低耦合性，以伊爾特為中心，用OAuth Provider整合各項程式。
 
 ## CH2: 安裝
-#### 步驟
+### 步驟
 - 執行終端指令 `git clone <本專案git位址>` 本專案到指定資料夾
 - 將網路伺服器設定根目錄到本專案的public資料夾，或是指定到本專案根目錄的server資料夾。_（註1）_
-- 執行終端指令 `composer update` ，更新vendor。_（註1）_
-- 編輯 `app/config/app.php` ，將 `url` 參數修改為本專案的根目錄，並且更新 `key` 參數的值。_（註1）_
-- 編輯 `app/config/database.php` ，修改資料庫連線參數。_（註1）_
-- 編輯 `app/config/hybridauth.php` ，修改 `base_url` 參數，以及providers的 `id` 與 `secret` 。_（註2）_
-- 編輯 `app/config/mail.php` ，修改Email Sever的相關參數。_（註1）_
+- 執行終端指令 `composer update` ，更新vendor，詳細請參照 [Laravel Framework][1] 的說明文件。
+- 編輯 `app/config/app.php` ，將 `url` 參數修改為本專案的根目錄，並且更新 `key` 參數的值，詳細請參照 [Laravel Framework][1] 的說明文件。
+- 編輯 `app/config/database.php` ，修改資料庫連線參數，詳細請參照 [Laravel Framework][1] 的說明文件。
+- 編輯 `app/config/hybridauth.php` ，修改 `base_url` 參數，以及providers的 `id` 與 `secret`，詳細說明請參照下方的 Portal。
+- 編輯 `app/config/mail.php` ，修改Email Sever的相關參數，詳細請參照 [Laravel Framework][1] 的說明文件。
 - 執行終端指令 `php artisan migrate` ，建立資料表。
 - 連線到網站，測試是否正常：
     - 是否能正常看到頁面。
@@ -26,9 +26,9 @@
 - 編輯 `app/config/app.php` ，將 `debug` 參數改為 `false` 。
 - 開始運作本網站囉！
 
-#### 備註
-1. 詳細請參照 [Laravel Framework][1] 的說明文件。
-2. 詳細請參照 [Hybridauth][2] 官方文件或是 [此說明頁面][3]。
+### Portal
+
+本系統不儲存密碼，只使用 Google 或者 Facebook 進行登入，但此方式需要在 Google 或是 Facebook 上面設定好 API Key 相關訊息，這些訊息都在 `app/config/hybridauth.php` 內，其檔案本身附有詳細說明，請前往查看並設定。
 
 ## CH3: 架構
 ### OAuth Login

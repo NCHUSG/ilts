@@ -13,9 +13,19 @@ class PortalController extends BaseController {
             Session::forget('portal.callback');
         }
 
+        $hybridauth_config = Config::get('hybridauth');
+
+        $availible_providers = array();
+
+        foreach ($hybridauth_config['providers'] as $key => $provider) {
+            if ($provider['enabled']) {
+                $provider_name = strtolower($key);
+                $availible_providers[$provider_name] = action('PortalController@oauth',$provider_name);
+            }
+        }
+
         $data = array();
-        $data['url'] = array('google'   => action('PortalController@oauth', 'google'),
-                             'facebook' => action('PortalController@oauth', 'facebook'));
+        $data['urls'] = $availible_providers;
 
         return View::make('portal/login', array('name' => 'Login'))->with($data);
     }
@@ -36,17 +46,18 @@ class PortalController extends BaseController {
             return;
         }
         try {
+            $hybridauth_config = Config::get('hybridauth');
 
             $provider = strtolower($action);
-            $providers = array('google', 'facebook');
+            $providers = array_map('strtolower',array_keys($hybridauth_config['providers']));
 
-            if ( !in_array($provider, $providers)) {
-                echo 'invalid provider!';
-                return;
-            }
+            if ( !in_array($provider, $providers))
+                throw new Exception("invalid provider!", 1);
+
+            $hybridauth_config['base_url'] = route("provider","auth");
 
             // create a HybridAuth object
-            $socialAuth = new Hybrid_Auth(app_path() . '/config/hybridauth.php');
+            $socialAuth = new Hybrid_Auth($hybridauth_config);
             // authenticate with Google
             $provider = $socialAuth->authenticate($provider);
             // fetch user profile
@@ -181,7 +192,8 @@ class PortalController extends BaseController {
 
         if ($validator->fails())
         {
-            return Redirect::to('portal/register')->withErrors($validator)->withInput();
+            //return Redirect::to('portal/register')->withErrors($validator)->withInput();
+            return $validator->errors();
         }
         else {
             $register = (object) Session::get('register');

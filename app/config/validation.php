@@ -64,7 +64,7 @@ return array(
             ),
             'update' => array(
                 'rules' => array(
-                    'name'          => "required|unique:oauth_projects,name,{$id},project_id",
+                    'name'          => "required|unique:oauth_projects,name,project_id",
                     'describe'      => 'required',
                     'email'         => 'required',
                 ),

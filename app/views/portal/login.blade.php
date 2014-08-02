@@ -64,12 +64,16 @@
         </div>
       </div>
       <div class="col-md-4 col-sm-4">
-        <a href="{{ $url['google'] }}" class="btn btn-block btn-social btn-google-plus">
-          <i class="fa fa-google-plus"></i> Sign in with Google
-        </a>
-        <a href="{{ $url['facebook'] }}" class="btn btn-block btn-social btn-facebook">
-          <i class="fa fa-facebook"></i> Sign in with Facebook
-        </a>
+        @if( isset($urls['google']) )
+          <a href="{{ $urls['google'] }}" class="btn btn-block btn-social btn-google-plus">
+            <i class="fa fa-google-plus"></i> Sign in with Google
+          </a>
+        @endif
+        @if( isset($urls['facebook']) )
+          <a href="{{ $urls['facebook'] }}" class="btn btn-block btn-social btn-facebook">
+            <i class="fa fa-facebook"></i> Sign in with Facebook
+          </a>
+        @endif
       </div>
     </div>
   </div>

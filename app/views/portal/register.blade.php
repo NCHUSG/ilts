@@ -25,6 +25,37 @@
     </div>
   </div>
 
+  <script src="{{ asset('assets/js/jquery.validate.min.js'); }}"></script>
+
+  <script>
+    function submit_registration(){
+      var form_data = $( "form" ).serializeArray();
+
+      console.log(form_data);
+      
+      $.post('{{$action}}',form_data,function(response){
+        console.log(response);
+      });
+    }
+    $(document).ready(function(){
+      $('button[type=submit]').click(function(){
+
+        if ($(this).is('[scope=simple]')){
+          console.log("!!!");
+          $('div#optional_field').slideUp(function(){
+            $('div#optional_field').empty();
+            submit_registration();
+          });
+        }
+        else
+          submit_registration();
+        return false
+      });
+      $('form').submit(function(e){
+        return false;
+      });
+    });
+  </script>
 
 {{ Form::open(array('url' => $action, 'class'=>'form-horizontal', 'role'=>'form')) }}
 
@@ -69,7 +100,7 @@
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
               <!-- <input type="hidden" name="value" value="" /> -->
-              <button type="submit" class="btn btn-default pull-right">略過選填資料，註冊（Register）</button>
+              <button type="submit" class="btn btn-default pull-right" scope="simple">略過選填資料，註冊（Register）</button>
             </div>
           </div>
         <!-- </form> -->
@@ -79,7 +110,7 @@
 
   <div style="margin-top:30px">
   </div>
-  <div class="container block">
+  <div class="container block" id="optional_field">
     <h3 class="text-center">選填資料</h3>
     <div class="row">
       <div class="col-md-12 col-sm-12">
@@ -153,7 +184,7 @@
           </div>
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-              <button type="submit" class="btn btn-default pull-right">註冊（Register）</button>
+              <button type="submit" class="btn btn-default pull-right" scope="full">註冊（Register）</button>
             </div>
           </div>
 
@@ -162,6 +193,5 @@
   </div>
 {{ Form::close() }}
   <div>
-
   </div>
 @stop
