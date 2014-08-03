@@ -13,9 +13,19 @@
 - 執行終端指令 `git clone <本專案git位址>` 本專案到指定資料夾
 - 將網路伺服器設定根目錄到本專案的public資料夾，或是指定到本專案根目錄的server資料夾。_（註1）_
 - 執行終端指令 `composer update` ，更新vendor，詳細請參照 [Laravel Framework][1] 的說明文件。
+- 複製設定示範檔案至正式設定檔：
+
+  ```
+  cp app/config/app.example.php app/config/app.php
+  cp app/config/database.example.php app/config/database.php
+  cp app/config/hybridauth.example.php app/config/hybridauth.php
+  cp app/config/sites.example.php app/config/sites.php
+  ```
+
 - 編輯 `app/config/app.php` ，將 `url` 參數修改為本專案的根目錄，並且更新 `key` 參數的值，詳細請參照 [Laravel Framework][1] 的說明文件。
 - 編輯 `app/config/database.php` ，修改資料庫連線參數，詳細請參照 [Laravel Framework][1] 的說明文件。
 - 編輯 `app/config/hybridauth.php` ，修改 `base_url` 參數，以及providers的 `id` 與 `secret`，詳細說明請參照下方的 Portal。
+- 編輯 `app/config/sites.php` ，修改網站的相關參數，詳細請參照 [Laravel Framework][1] 的說明文件。
 - 編輯 `app/config/mail.php` ，修改Email Sever的相關參數，詳細請參照 [Laravel Framework][1] 的說明文件。
 - 執行終端指令 `php artisan migrate` ，建立資料表。
 - 連線到網站，測試是否正常：
