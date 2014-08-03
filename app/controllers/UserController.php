@@ -3,43 +3,33 @@
 class UserController extends BaseController {
 
     protected $layout = 'master';
+    protected $user;
 
     public function __construct() {
-        Form::macro('bs_text', function($label, $name, $id, $placeholder, $default="")
-        {
-            return <<<_END
-            <div class="form-group">
-              <label for="{$id}" class="col-sm-2 control-label">{$label}</label>
-              <div class="col-sm-10">
-                <input type="email" class="form-control" name="{$name}" id="{$id}" placeholder="{$placeholder}" value="{$default}">
-              </div>
-            </div>
-_END;
-        });
-
-        Form::macro('bs_area', function($label, $name, $id, $placeholder, $default="")
-        {
-            return <<<_END
-            <div class="form-group">
-              <label for="{$id}" class="col-sm-2 control-label">{$label}</label>
-              <div class="col-sm-10">
-                  <textarea class="form-control" name="{$name}" id="{$id}" placeholder="{$placeholder}>
-                    {$default}
-                  </textarea>
-              </div>
-            </div>
-_END;
-        });
+        $this->user = IltUser::find(Session::get('user_being.u_id'));
     }
 
     public function index()
     {
-        $u_id = Session::get('user_being.u_id');
-        $user = IltUser::find($u_id);
+        if(!$this->user)return Redirect::route('logout');
+        $user = $this->user;
+        $u_id = $user->u_id;
         $user_option = IltUserOptions::find($u_id);
         $user_providers = IltUserProvider::where('u_id', '=', $u_id)->get();
         $user_providers_arr = array();
-        $providers = Config::get('sites.providers');
+        
+        //$providers = Config::get('sites.providers');
+
+        $hybridauth_config = Config::get('hybridauth');
+
+        $providers = array();
+
+        foreach ($hybridauth_config['providers'] as $key => $provider) {
+            if ($provider['enabled']) {
+                $providers[] = $key;
+            }
+        }
+
         $providers_info = '';
         $access_clients = OAuthAccessToken::where('user_id', '=', $u_id)->get();
         $project = array();
@@ -72,20 +62,41 @@ _END;
 
         }
 
+        $user_info = array(
+            'username' => $user->u_username,
+            'nickname' => $user->u_nick,
+            'email' => $user->u_email,
+        );
+
+        $user_option_info = array(
+            'first_name' => $user_option->u_first_name,
+            'first_name' => $user_option->u_first_name,
+            'gender' => $user_option->u_gender,
+            'birthday' => $user_option->u_birthday,
+            'phone' => $user_option->u_phone,
+            'address' => $user_option->u_address,
+            'website' => $user_option->u_website,
+            'gravatar' => $user_option->u_gravatar,
+            'description' => $user_option->u_description,
+        );
+
         $data['provider']       = Session::get('user_being.provider');
         $data['providers_info'] = $providers_info;
         $data['projects_info']  = $projects_info;
         $data['user']           = $user;
-        $data['user_option']    = $user_option;
+        $data['user_info']      = $user_info;
+        $data['user_option']    = $user_option_info;
         $date['is_developer']   = in_array('DEVELOPER', Session::get('user_being.authority') );
 
+        $data['fields']         = Config::get('fields');
 
         return View::make('user/info', array('name' => 'user'))->with($data);
     }
 
     public function apply_developer()
     {
-        $user = IltUser::find(Session::get('user_being.u_id'));
+        if(!$this->user)return Redirect::route('logout');
+        $user = $this->user;
 
         if ( false !== stripos($user->u_authority, 'DEVELOPER' )) {
             return Redirect::action('DeveloperController@index');
@@ -130,9 +141,9 @@ _END;
     }
 
     public function email_vallidate($type, $code) {
-
+        if(!$this->user)return Redirect::route('logout');
         $type = strtoupper($type);
-        $user = IltUser::find(Session::get('user_being.u_id'));
+        $user = $this->user;
         $email_orm = IltEmailVallisations::where('type', '=', $type)
                                      ->where('code', '=', $code)
                                      ->where('expires', '>', date('Y-m-d'))
@@ -165,5 +176,43 @@ _END;
 
     }
 
+    public function update_info($type){
+        if(!$this->user)return Redirect::route('logout');
+        $user = $this->user;
+
+        $availible_type = array('basic','option');
+        if(!in_array($type, $availible_type))
+            return "submit_type_not_availible!";
+
+        $rules      = Config::get('validation.CTRL.user.update_info.'.$type.'.rules');
+        $messages   = Config::get('validation.CTRL.user.update_info.'.$type.'.messages');
+        $validator  = Validator::make(Input::all(), $rules, $messages);
+
+        if ($validator->fails()){
+            return $validator->errors();
+        }
+
+        if($type == "basic"){
+            $user->u_username = Input::get('username');
+            $user->u_nick     = Input::get('nickname');
+            $user->u_email    = Input::get('email');
+            $user->save();
+        }
+        else{
+            $user_opt = IltUserOptions::find($user->u_id);
+            $user_opt->u_first_name     = Input::get('first_name');
+            $user_opt->u_last_name      = Input::get('last_name');
+            $user_opt->u_gender         = Input::get('gender');
+            $user_opt->u_birthday       = Input::get('birthday');
+            $user_opt->u_phone          = Input::get('phone');
+            $user_opt->u_address        = Input::get('address');
+            $user_opt->u_website        = Input::get('website');
+            $user_opt->u_gravatar       = Input::get('gravater');
+            $user_opt->u_description    = Input::get('description');
+            $user_opt->save();
+        }
+        
+        return "OK!";
+    }
 
 }

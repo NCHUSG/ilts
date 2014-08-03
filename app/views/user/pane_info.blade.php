@@ -1,105 +1,262 @@
+<script>
+  $(document).ready(function(){
+    $('span.to_edit').click(function(){
+      $(this).parents('.editable_range').toggleClass('editing');
+    });
 
+    var submiting;
+    $('span.save').click(function(){
+      if(!submiting){
+        submiting = $(this).parents('.editable_range').find('form');
+        var form_data = submiting.serializeArray();
+        var action = submiting.attr('action');
+
+        $.ajax({
+          type: "POST",
+          data: form_data,
+          url: action,
+          success: function(data){
+            if(typeof data == "object"){
+              submiting.data('isSuccess',false);
+              for(k in data){
+                $('input[name='+k+']').next().text(data[k]);
+              }
+              $('#modify_status').text("您填寫的選項有誤，請檢查，謝謝");
+              $('#modifying .modal-footer').removeClass('hidden');
+            }
+            else
+              submiting.data('isSuccess',true);
+          },
+          error: function(xhr,status_text){
+            $('#modify_status').text("資料傳送錯誤："+status_text);
+            $('#modifying .modal-footer').removeClass('hidden');
+            submiting.data('isSuccess',false);
+          },
+          complete:function(data){
+            if(submiting.data('isSuccess')){
+              $('#noTrespassingOuterBarG').slideUp();
+              $('#modify_status').text("成功！");
+              var complete_interval = setInterval(function(){
+                location.reload();
+                console.log("reloading...");
+                clearInterval(complete_interval);
+              },1000);
+            }
+
+            submiting=false;
+          }
+        });
+      }
+      $('#modifying .modal-footer').addClass('hidden');
+      $('#modifying').modal({
+        keyboard: false
+      });
+    });
+  });
+</script>
+
+<style>
+  p.editable{
+    height: 24px;
+    padding: 6px 12px;
+  }
+  div.editable_range:not(.editing) .editing_show{
+    display: none;
+  }
+  div.editable_range.editing .editable{
+    display: none;
+  }
+
+  span.to_edit:hover{
+    background-color:rgba(24, 77, 129, 1);
+  }
+
+  span.save:hover{
+    background-color:rgba(189, 138, 50, 1);
+  }
+
+  p.form-control-static.editing_show{
+    padding-top: 0;
+  }
+</style>
 <div id="user_info" class="row content tab-pane active">
-  <div class="col-md-12 col-sm-12">
+  <div class="col-md-12 col-sm-12 editable_range">
     <h4>
       基本資料
-      <small>
-        <a href="#" data-toggle="modal" data-target="#user_info_modify">[Edit]</a>
-      </small>
+      <span class="badge to_edit" id="basic_info"><span class="editing_show">取消</span>編輯</span>
+      <span class="badge editing_show save">儲存</span>
     </h4>
-    <ul class="list-unstyled">
-      <li>ＩＤ：{{$user->u_username}}</li>
-      <li>暱稱：{{$user->u_nick}}</li>
-      <li>信箱：{{$user->u_email}}</li>
-      <li>權限：{{$user->u_authority}}</li>
-    </ul>
-    -
+    {{ Form::open(array('url' => route('update_info','basic'), 'class'=>'form-horizontal', 'role'=>'form')) }}
+      @foreach ($user_info as $key => $value)
+        <div class="form-group">
+          <label for="input-{{ $key }}" class="col-sm-2 control-label">{{ $fields[$key]['zh_TW'] }}</label>
+          <div class="col-sm-10">
+            <p class="editable" name="{{ $key }}">{{ $value }}</p>
+            <input type="{{ $key }}" name="{{ $key }}" class="form-control editing_show" id="input-{{ $key }}" placeholder="{{ $value }}" value="{{ $value }}">
+            <p class="text-danger form-control-static editing_show"></p>
+          </div>
+        </div>
+      @endforeach
+    {{ Form::close() }}
+  </div>
+  <div class="col-md-12 col-sm-12 editable_range">
     <h4>
       個人資料
-      <small>
-        <a href="#" data-toggle="modal" data-target="#personal_info_modify">[Edit]</a>
-      </small>
+      <span class="badge to_edit" id="basic_info"><span class="editing_show">取消</span>編輯</span>
+      <span class="badge editing_show save">儲存</span>
     </h4>
-    <ul class="list-unstyled">
-      <li>姓名：{{$user_option->u_last_name}}{{$user_option->u_first_name}}</li>
-      <li>性別：{{$user_option->u_gender}}</li>
-      <li>生日：{{$user_option->u_birthday}}</li>
-      <li>電話：{{$user_option->u_phone}}</li>
-      <li>地址：{{$user_option->u_address}}</li>
-      <li>網站：{{$user_option->u_website}}</li>
-      <li>頭像：{{$user_option->u_gravatar}}</li>
-      <li>敘述：{{$user_option->u_description}}</li>
-    </ul>
-
+    {{ Form::open(array('url' => route('update_info','option'), 'class'=>'form-horizontal', 'role'=>'form')) }}
+      @foreach ($user_option as $key => $value)
+        <div class="form-group">
+          <label for="input-{{ $key }}" class="col-sm-2 control-label">{{ $fields[$key]['zh_TW'] }}</label>
+          <div class="col-sm-10">
+            <p class="editable" name="{{ $key }}">{{ $value }}</p>
+            <input type="{{ $key }}" name="{{ $key }}" class="form-control editing_show" id="input-{{ $key }}" placeholder="{{ $value }}" value="{{ $value }}">
+            <p class="text-danger form-control-static editing_show"></p>
+          </div>
+        </div>
+      @endforeach
+    {{ Form::close() }}
   </div>
 </div>
 
-<div class="modal fade" id="user_info_modify" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+<div class="modal fade" id="modifying" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <form class="form-horizontal" role="form">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title" id="myModalLabel">使用者資料修改</h4>
+          <h4 class="modal-title" id="myModalLabel">個人資料修改...</h4>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label class="col-sm-2 control-label">ＩＤ</label>
-            <div class="col-sm-10">
-              <p class="form-control-static">email@example.com</p>
-            </div>
+          <style>
+          #noTrespassingOuterBarG{
+            margin-left: auto;
+            margin-right: auto;
+            height:34px;
+            width:268px;
+            border:2px solid #27B0B0;
+            overflow:hidden;
+            background-color:#FFFFFF;
+          }
+
+          .noTrespassingBarLineG{
+          background-color:#27B0B0;
+          float:left;
+          width:23px;
+          height:201px;
+          margin-right:40px;
+          margin-top:-47px;
+          -moz-transform:rotate(45deg);
+          -webkit-transform:rotate(45deg);
+          -ms-transform:rotate(45deg);
+          -o-transform:rotate(45deg);
+          transform:rotate(45deg);
+          }
+
+          .noTrespassingAnimationG{
+          width:395px;
+          -moz-animation-name:noTrespassingAnimationG;
+          -moz-animation-duration:1s;
+          -moz-animation-iteration-count:infinite;
+          -moz-animation-timing-function:linear;
+          -webkit-animation-name:noTrespassingAnimationG;
+          -webkit-animation-duration:1s;
+          -webkit-animation-iteration-count:infinite;
+          -webkit-animation-timing-function:linear;
+          -ms-animation-name:noTrespassingAnimationG;
+          -ms-animation-duration:1s;
+          -ms-animation-iteration-count:infinite;
+          -ms-animation-timing-function:linear;
+          -o-animation-name:noTrespassingAnimationG;
+          -o-animation-duration:1s;
+          -o-animation-iteration-count:infinite;
+          -o-animation-timing-function:linear;
+          animation-name:noTrespassingAnimationG;
+          animation-duration:1s;
+          animation-iteration-count:infinite;
+          animation-timing-function:linear;
+          }
+
+          #noTrespassingFrontBarG{
+          }
+
+          @-moz-keyframes noTrespassingAnimationG{
+          0%{
+          margin-left:0px;
+          }
+
+          100%{
+          margin-left:-64px;
+          }
+
+          }
+
+          @-webkit-keyframes noTrespassingAnimationG{
+          0%{
+          margin-left:0px;
+          }
+
+          100%{
+          margin-left:-64px;
+          }
+
+          }
+
+          @-ms-keyframes noTrespassingAnimationG{
+          0%{
+          margin-left:0px;
+          }
+
+          100%{
+          margin-left:-64px;
+          }
+
+          }
+
+          @-o-keyframes noTrespassingAnimationG{
+          0%{
+          margin-left:0px;
+          }
+
+          100%{
+          margin-left:-64px;
+          }
+
+          }
+
+          @keyframes noTrespassingAnimationG{
+          0%{
+          margin-left:0px;
+          }
+
+          100%{
+          margin-left:-64px;
+          }
+
+          }
+
+          </style>
+          <div id="noTrespassingOuterBarG">
+          <div id="noTrespassingFrontBarG" class="noTrespassingAnimationG">
+          <div class="noTrespassingBarLineG">
           </div>
-          {{Form::bs_text('暱稱', 'nickname', 'iNick', 'nickname')}}
-          {{Form::bs_text('信箱', 'email', 'iEmail', 'email')}}
+          <div class="noTrespassingBarLineG">
+          </div>
+          <div class="noTrespassingBarLineG">
+          </div>
+          <div class="noTrespassingBarLineG">
+          </div>
+          <div class="noTrespassingBarLineG">
+          </div>
+          <div class="noTrespassingBarLineG">
+          </div>
+          </div>
+          </div>
+          <h3 id="modify_status" class="text-center">...</h3>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Save changes</button>
+        <div class="modal-footer hidden">
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
         </div>
       </div><!-- /.modal-content -->
-    </form>
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-
-
-
-<div class="modal fade" id="personal_info_modify" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form class="form-horizontal" role="form">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title" id="myModalLabel">個人資料修改</h4>
-        </div>
-        <div class="modal-body">
-          {{Form::bs_text('姓', 'lastname', 'iLastName', '趙')}}
-          {{Form::bs_text('名', 'firstname', 'iFirstName', '錢孫')}}
-          {{Form::bs_text('性別', 'gender', 'iGender', 'Radio')}}
-          <select class="form-control">
-            <option>1</option>
-            <option>2</option>
-            <option>3</option>
-            <option>4</option>
-            <option>5</option>
-          </select>
-          {{Form::bs_text('生日', 'birthday', 'iBirthday', 'yyyy/mm/dd')}}
-          {{Form::bs_text('電話', 'phone', 'iPhone', '0912-345678')}}
-          {{Form::bs_text('地址', 'address', 'iAddress', '12345 台中市南區250號')}}
-          {{Form::bs_text('網站', 'site', 'iSite', 'http://foo.com')}}
-          {{Form::bs_text('頭像', 'gravaster', 'iGravaster', 'foo@bar.com')}}
-          <div class="form-group">
-            <label for="inputEmail3" class="col-sm-2 control-label">敘述</label>
-            <div class="col-sm-10">
-              <input type="email" class="form-control" id="iDescribe" name="describe" placeholder="Email">
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Save changes</button>
-        </div>
-      </div><!-- /.modal-content -->
-    </form>
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->

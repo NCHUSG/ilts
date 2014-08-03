@@ -175,10 +175,12 @@ class PortalController extends BaseController {
         $default['phone']       = Input::old('phone',       $user->phone);
         $default['address']     = Input::old('address',     $user->address);
         $default['website']     = Input::old('website',     $user->webSiteURL);
-        $default['description'] = Input::old('description', $user->description);
+        $default['description'] = Input::old('description', "");
 
         $data = array('default' => $default,
-                      'action'  => action('register_process') );
+                      'action'  => action('register_process'),
+                      'success_redirect' => route('user')
+        );
 
         return View::make('portal/register', array('name' => 'register'))->with($data);
     }
@@ -194,6 +196,7 @@ class PortalController extends BaseController {
         {
             //return Redirect::to('portal/register')->withErrors($validator)->withInput();
             return $validator->errors();
+            //return Redirect::route('user');
         }
         else {
             $register = (object) Session::get('register');

@@ -3,6 +3,7 @@
 /app/config/app.php
 /app/config/database.php
 /app/config/hybridauth.php
+/app/config/site.php
 composer.phar
 composer.lock
 .env.local.php

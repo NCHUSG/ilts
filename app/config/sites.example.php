@@ -9,7 +9,7 @@ return array(
     |
     */
 
-    'name' => '幼稚鬼團',
+    'name' => '學生自治組織',
 
 
     /*
@@ -19,7 +19,7 @@ return array(
     |
     */
 
-    'maintainer' => 'CHILDISH',
+    'maintainer' => '',
 
 
     /*

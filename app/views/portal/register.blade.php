@@ -1,6 +1,7 @@
 @extends('portal.master')
 
 @section('content')
+  <link rel="stylesheet" href="{{ asset('assets/css/submit_loading.css'); }}">
   <style type="text/css">
     .block {
       width: 700px;
@@ -14,7 +15,12 @@
       -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
       box-shadow: 0 1px 2px rgba(0,0,0,.05);
     }
-
+    
+    .progress-button{
+      width: 100%;
+      border-radius: 5px;
+      overflow: hidden;
+    }
 
   </style>
 
@@ -25,30 +31,86 @@
     </div>
   </div>
 
-  <script src="{{ asset('assets/js/jquery.validate.min.js'); }}"></script>
-
   <script>
-    function submit_registration(){
-      var form_data = $( "form" ).serializeArray();
+    var submit_loading_inteval,submiting;
 
-      console.log(form_data);
+    function submit_registration(){
+      var form_data = $( "form#regis_form" ).serializeArray();
       
-      $.post('{{$action}}',form_data,function(response){
-        console.log(response);
+      $.ajax({
+        type: "POST",
+        data: form_data,
+        url: '{{ $action }}',
+        success: function(data){
+          if(typeof data == "object"){
+            submiting.data('isSuccess',false);
+            for(k in data){
+              $('input[name='+k+']').next().text(data[k]);
+            }
+            alert("您填寫的選項有誤，請檢查，謝謝");
+          }
+          else
+            submiting.data('isSuccess',true);
+        },
+        error: function(xhr,status_text){
+          alert(status_text);
+          submiting.data('isSuccess',false);
+        },
+        complete:function(){
+          clearInterval(submit_loading_inteval);
+          submiting.find('span.progress-inner').css('width','100%');
+
+          var complete_interval_1 = setInterval(function(){
+            submiting.removeClass('state-loading');
+            if(submiting.data('isSuccess')){
+              submiting.css('background-color','#0E7138');
+              submiting.text("註冊成功！");
+              submiting.addClass('state-success');
+            }
+            var complete_interval_2 = setInterval(function(){
+              submiting.removeClass('state-success');
+              submiting.find('span.progress-inner').css('width','0%');
+              clearInterval(complete_interval_2);
+              submit_loading_inteval=false;
+              if(submiting.data('isSuccess'))
+                window.location = '{{ $success_redirect }}';
+              else{
+                var optional_field = $('div#optional_field');
+                optional_field.html(submiting.data('optional_field_tmp'));
+                optional_field.slideDown();
+              }
+                
+            },1000);
+            clearInterval(complete_interval_1);
+          },500);
+        }
       });
     }
     $(document).ready(function(){
       $('button[type=submit]').click(function(){
+        if(!submit_loading_inteval){
+          submiting = $(this);
+          submiting.data('percent',0);
+          $(this).addClass('state-loading');
 
-        if ($(this).is('[scope=simple]')){
-          console.log("!!!");
-          $('div#optional_field').slideUp(function(){
-            $('div#optional_field').empty();
+          submit_loading_inteval = setInterval(function(){
+            
+            var percent=submiting.data('percent');
+            submiting.find('span.progress-inner').css('width',percent+'%');
+            submiting.data('percent',percent+10);
+          },500);
+
+          if ($(this).is('[scope=simple]')){
+            var optional_field = $('div#optional_field');
+            optional_field.slideUp(function(){
+              submiting.data('optional_field_tmp',optional_field.html())
+              optional_field.empty();
+              submit_registration();
+            });
+          }
+          else
             submit_registration();
-          });
         }
-        else
-          submit_registration();
         return false
       });
       $('form').submit(function(e){
@@ -57,8 +119,7 @@
     });
   </script>
 
-{{ Form::open(array('url' => $action, 'class'=>'form-horizontal', 'role'=>'form')) }}
-
+{{ Form::open(array('url' => $action, 'class'=>'form-horizontal', 'role'=>'form', 'id' => 'regis_form')) }}
   <div class="container block">
     <h3 class="text-center">必填資料</h3>
     <div class="row">
@@ -98,9 +159,10 @@
             </div>
           </div>
           <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
+            <div class="col-xs-12">
               <!-- <input type="hidden" name="value" value="" /> -->
-              <button type="submit" class="btn btn-default pull-right" scope="simple">略過選填資料，註冊（Register）</button>
+              <button type="submit" scope="simple" class="progress-button" data-style="rotate-back" data-perspective="" data-horizontal=""><span class="progress-wrap"><span class="content">我要略過選填資料，直接註冊</span><span class="progress"><span style="width: 0%; opacity: 1;" class="progress-inner"></span></span></span></button>
+              <!--<button type="submit" class="btn btn-default pull-right" scope="simple">略過選填資料，註冊（Register）</button> -->
             </div>
           </div>
         <!-- </form> -->
@@ -178,13 +240,9 @@
             </div>
           </div>
           <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
-              <?php echo Form::token();?>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
-              <button type="submit" class="btn btn-default pull-right" scope="full">註冊（Register）</button>
+            <div class="col-xs-12">
+              <button type="submit" class="progress-button" data-style="shrink" data-horizontal=""><span class="content">註冊（Register）</span><span class="progress"><span style="width: 0%; opacity: 1;" class="progress-inner"></span></span></button>
+              <!--<button type="submit" class="btn btn-default pull-right" scope="full">註冊（Register）</button>-->
             </div>
           </div>
 
@@ -192,6 +250,4 @@
     </div>
   </div>
 {{ Form::close() }}
-  <div>
-  </div>
 @stop

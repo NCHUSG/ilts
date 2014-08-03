@@ -52,6 +52,8 @@ Route::group(array('before' => 'auth_only'), function()
 
     Route::get('email_vallidation/{type}/{code}', array( 'uses'=> 'UserController@email_vallidate'));
 
+    Route::post('update_info/{type}', array( 'uses' => 'UserController@update_info', 'as' => 'update_info'));
+
     Route::group(array('before' => 'apply_student'), function()
     {
         Route::get('user/apply/student/email', array( 'uses' => 'StudentController@apply_email'));

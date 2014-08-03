@@ -137,6 +137,40 @@ return array(
             )
         ),
         'user' => array(
+            'update_info' => array(
+                'basic' => array(
+                    'rules' => array(
+                        'username'    => 'required|alpha_dash',
+                        'nickname'    => 'required',
+                        'email'       => 'required|email',
+                    ),
+                    'messages' => array(
+                        'required'      => '本欄位選項是必填的！',
+                        'alpha_dash'    => '本欄位選項必需為大小寫英文字母（A-Z, a-z）、底線（_）、減號（-）組成。',
+                        'email'         => '本欄位選項請符合email格式（Ex. foo@bar.com）。',
+                    )
+                ),
+                'option' => array(
+                    'rules' => array(
+                        'first_name'  => '',
+                        'last_name'   => '',
+                        'gender'      => '',
+                        'birthday'    => 'date|date_format:Y/m/d',
+                        'phone'       => 'numeric',
+                        'address'     => '',
+                        'website'     => 'url',
+                        'gravater'    => 'email',
+                        'description' => ''
+                    ),
+                    'messages' => array(
+                        'email'         => '本欄位選項請符合email格式（Ex. foo@bar.com）。',
+                        'url'           => '本欄位選項請符合網址(url)格式（Ex. http://www.foo.com ）。',
+                        'numeric'       => '本欄位選項請符合純數字格式。',
+                        'date'          => '本欄位選項請輸入有效的日期範圍。',
+                        'date_format'   => '本欄位選項請符合純日期（yyyy/mm/dd）格式。'
+                    )
+                )
+            ),
             'apply_developer' => array(
                 'rules' => array(
                     'agree' => 'accepted',
