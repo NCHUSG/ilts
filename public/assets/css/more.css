@@ -1,0 +1,22 @@
+div.panel.admin div.panel-heading{
+  background-color: #D8C5A7;
+}
+div.panel.member div.panel-heading{
+  background-color: #A7D8BE;
+}
+div.panel.pending div.panel-heading{
+  background-color: rgba(218, 192, 204, 1);
+}
+div.panel.guest div.panel-heading{
+  background-color: rgba(218, 218, 218, 1);
+}
+span.statusText{
+  float:right;
+}
+a.groupPanelBtn{
+  margin-left: 5px;
+  margin-right: 5px;
+}
+.more-sample{
+  display: none;
+}

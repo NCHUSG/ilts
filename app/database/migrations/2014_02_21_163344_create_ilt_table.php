@@ -18,7 +18,7 @@ class CreateIltTable extends Migration {
 		    $table->string('u_username')->unique();
 		    $table->string('u_nick');
 		    $table->string('u_email')->unique();
-		    $table->string('u_status')->default('');
+		    $table->string('u_status')->default('guest');
 		    $table->string('u_authority')->nullable();
 		    $table->timestamps();
 		    $table->softDeletes();
@@ -62,8 +62,8 @@ class CreateIltTable extends Migration {
 		    $table->increments('u_p_id');
 		    $table->string('u_p_type');
 		    $table->string('u_p_identifier');
-		    $table->string('u_p_email');
-			$table->string('u_id');
+		    $table->string('u_p_email')->nullable();
+			$table->string('u_id')->nullable();
 		    $table->timestamps();
 		    $table->softDeletes();
 		});
@@ -73,9 +73,9 @@ class CreateIltTable extends Migration {
 		    $table->increments('g_id');
 		    $table->string('g_code')->unique();
 		    $table->string('g_name');
-		    $table->integer('g_parent_id')->unsigned()->index();
-		    $table->integer('g_level_sort')->unsigned()->nullable();
-		    $table->string('g_status');
+		    $table->integer('g_parent_id')->unsigned()->default(0);
+		    $table->integer('g_level_sort')->unsigned()->default(0);
+		    $table->string('g_status')->default('');
 		    $table->timestamps();
 		    $table->softDeletes();
 		});
@@ -86,8 +86,7 @@ class CreateIltTable extends Migration {
 		    $table->integer('u_id')->unsigned();
 		    $table->integer('g_id')->unsigned();
 			$table->string('i_authority')->nullable();
-		    $table->string('i_status');
-			$table->date('i_expires');
+		    $table->string('i_status')->default('');
 		    $table->timestamps();
 		    $table->softDeletes();
 		});

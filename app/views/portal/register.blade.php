@@ -1,28 +1,8 @@
 @extends('portal.master')
 
 @section('content')
-  <link rel="stylesheet" href="{{ asset('assets/css/submit_loading.css'); }}">
-  <style type="text/css">
-    .block {
-      width: 700px;
-      background-color: rgba(244, 248, 240, 1);
-      padding: 15px;
-      border: 1px solid #e5e5e5;
-      -webkit-border-radius: 15px;
-      -moz-border-radius: 15px;
-      border-radius: 15px;
-      -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
-      -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
-      box-shadow: 0 1px 2px rgba(0,0,0,.05);
-    }
-    
-    .progress-button{
-      width: 100%;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-  </style>
+  <link rel="stylesheet" href="{{ asset('assets/css/form.css'); }}">
+  <script src="{{ asset('assets/js/form.js'); }}"></script>
 
   <div class="row">
     <div class="col-md-12 col-sm-12">
@@ -31,95 +11,7 @@
     </div>
   </div>
 
-  <script>
-    var submit_loading_inteval,submiting;
-
-    function submit_registration(){
-      var form_data = $( "form#regis_form" ).serializeArray();
-      
-      $.ajax({
-        type: "POST",
-        data: form_data,
-        url: '{{ $action }}',
-        success: function(data){
-          if(typeof data == "object"){
-            submiting.data('isSuccess',false);
-            for(k in data){
-              $('input[name='+k+']').next().text(data[k]);
-            }
-            alert("您填寫的選項有誤，請檢查，謝謝");
-          }
-          else
-            submiting.data('isSuccess',true);
-        },
-        error: function(xhr,status_text){
-          alert(status_text);
-          submiting.data('isSuccess',false);
-        },
-        complete:function(){
-          clearInterval(submit_loading_inteval);
-          submiting.find('span.progress-inner').css('width','100%');
-
-          var complete_interval_1 = setInterval(function(){
-            submiting.removeClass('state-loading');
-            if(submiting.data('isSuccess')){
-              submiting.css('background-color','#0E7138');
-              submiting.text("註冊成功！");
-              submiting.addClass('state-success');
-            }
-            var complete_interval_2 = setInterval(function(){
-              submiting.removeClass('state-success');
-              submiting.find('span.progress-inner').css('width','0%');
-              clearInterval(complete_interval_2);
-              submit_loading_inteval=false;
-              if(submiting.data('isSuccess'))
-                window.location = '{{ $success_redirect }}';
-              else{
-                var optional_field = $('div#optional_field');
-                optional_field.html(submiting.data('optional_field_tmp'));
-                optional_field.slideDown();
-              }
-                
-            },1000);
-            clearInterval(complete_interval_1);
-          },500);
-        }
-      });
-    }
-    $(document).ready(function(){
-      $('button[type=submit]').click(function(){
-        if(!submit_loading_inteval){
-          submiting = $(this);
-          submiting.data('percent',0);
-          $(this).addClass('state-loading');
-
-          submit_loading_inteval = setInterval(function(){
-            
-            var percent=submiting.data('percent');
-            submiting.find('span.progress-inner').css('width',percent+'%');
-            submiting.data('percent',percent+10);
-          },500);
-
-          if ($(this).is('[scope=simple]')){
-            var optional_field = $('div#optional_field');
-            optional_field.slideUp(function(){
-              submiting.data('optional_field_tmp',optional_field.html())
-              optional_field.empty();
-              submit_registration();
-            });
-          }
-          else
-            submit_registration();
-        }
-        return false
-      });
-      $('form').submit(function(e){
-        return false;
-      });
-    });
-  </script>
-
-{{ Form::open(array('url' => $action, 'class'=>'form-horizontal', 'role'=>'form', 'id' => 'regis_form')) }}
+{{ Form::open(array('url' => $action, 'class'=>'form-horizontal', 'role'=>'form', 'id' => 'ilt_form')) }}
   <div class="container block">
     <h3 class="text-center">必填資料</h3>
     <div class="row">

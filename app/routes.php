@@ -48,48 +48,71 @@ Route::group(array('before' => 'guest_only'), function()
 Route::group(array('before' => 'auth_only'), function()
 {
     ## 使用者頁面
-    Route::get('user/info', array( 'uses' => 'UserController@index', 'as' => 'user'));
+    Route::get('/user/info', array( 'uses' => 'UserController@index', 'as' => 'user'));
 
-    Route::get('email_vallidation/{type}/{code}', array( 'uses'=> 'UserController@email_vallidate'));
+    Route::get('/email_vallidation/{type}/{code}', array( 'uses'=> 'UserController@email_vallidate'));
 
-    Route::post('update_info/{type}', array( 'uses' => 'UserController@update_info', 'as' => 'update_info'));
+    Route::get('/user/identities', array( 'uses' => 'UserController@identities', 'as' => 'identities'));
 
-    Route::group(array('before' => 'apply_student'), function()
+    Route::post('/update_info/{type}', array( 'uses' => 'UserController@update_info', 'as' => 'update_info', 'before' => 'csrf'));
+
+    ## 群組介面
+    Route::group(array('before' => 'group'), function()
     {
-        Route::get('user/apply/student/email', array( 'uses' => 'StudentController@apply_email'));
-        Route::post('user/apply/student/email', array( 'uses' => 'StudentController@apply_email_process'));
+        Route::get('/group/info/{code}', array( 'uses' => 'GroupController@index', 'as' => 'group'));
 
-        Route::group(array('before' => 'apply_student_files'), function()
+        Route::get('/group/under/{code}', array( 'uses' => 'GroupController@subGroups', 'as' => 'subGroup', 'before' => 'groupUnder'));
+
+        Route::get('/group/join/{code}/{method}', array( 'uses' => 'GroupController@join', 'as' => 'join'));
+
+        Route::post('/group/join/{code}/{method}', array( 'uses' => 'GroupController@join', 'as' => 'join', 'before' => 'csrf'));
+
+        Route::group(array('before' => 'groupCreate'), function()
         {
-            Route::get('user/apply/student/files', array( 'uses' => 'StudentController@apply_files'));
-            Route::post('user/apply/student/files', array( 'uses' => 'StudentController@apply_files_process', 'after' => 'reload_authority'));
+            Route::get('/group/create/{code}' , array( 'uses' => 'GroupController@create', 'as' => 'createGroup'));
+
+            Route::post('/group/create/{code}' , array( 'uses' => 'GroupController@create_process', 'as' => 'createGroupProcess', 'before' => 'csrf'));
         });
+
+        Route::group(array('before' => 'groupAdmin'), function()
+        {
+            Route::get('/group/ctrl/{code}', array( 'uses' => 'GroupController@ctrl', 'as' => 'groupCtrl'));
+        });
+    });
+
+    ## 管理者專區。只有已登入的管理者可以看的路由，其餘者訪問本區直接轉入使用者頁面，
+    Route::group(array('before' => 'admin_only'), function()
+    {
+        Route::get('/admin' , array( 'uses' => 'AdminController@index', 'as' => 'admin'));
+
+        Route::post('/admin/options' , array( 'uses' => 'AdminController@option', 'as' => 'siteOption', 'before' => 'csrf'));
+    });
+
+    ## 創建根群組
+    Route::group(array('before' => 'creatRootGroup'), function()
+    {
+        Route::get('/group/create' , array( 'uses' => 'GroupController@create', 'as' => 'createRootGroup'));
+
+        Route::post('/group/create' , array( 'uses' => 'GroupController@create_process', 'as' => 'createRootGroupProcess', 'before' => 'csrf'));
     });
 
     Route::get('user/apply/developer', array( 'uses' => 'UserController@apply_developer'));
     Route::post('user/apply/developer', array( 'uses' => 'UserController@apply_developer'));
 
-    Route::get('developer', array( 'uses' => 'DeveloperController@index'));
-    Route::get('admin', array( 'uses' => 'AdminController@index'));
+    // Route::get('developer', array( 'uses' => 'DeveloperController@index'));
+    // Route::get('admin', array( 'uses' => 'AdminController@index'));
 
-    ## 登出程序
-    Route::get('portal/logout', array(  'uses' => 'PortalController@logout',
-                                        'as'   => 'logout'));
+    Route::get('/dev' , array( 'uses' => 'DeveloperController@index', 'as' => 'dev'));
 });
 
-# Filter：管理者專區。只有已登入的管理者可以看的路由，其餘者訪問本區直接轉入使用者頁面，
-Route::group(array('before' => 'auth_only|admin_only'), function()
-{
-    Route::get('ilt' , function()
-    {
-        return 'ilt page';
-    });
-});
+## 登出程序
+Route::get('/logout', array(  'uses' => 'PortalController@logout',
+                                    'as'   => 'logout'));
 
 # Filter：OAUTH專區。
 Route::group(array(), function()
 {
-    Route::group(array('before' => 'auth_only'), function()
+    Route::group(array('before' => 'oauth_only'), function()
     {
         Route::get('oauth/header', array( 'uses' => 'OAuthController@header'));
         Route::get('oauth/error001', array( 'uses' => 'OAuthController@argument_losing'));
@@ -115,4 +138,4 @@ Route::group(array('prefix' => 'v1/res/'), function()
     Route::resource('clients', 'API_ClientController', array('as' => 'client'));
 });
 
-
+Route::get('test', array('uses' => 'TestController@main'));

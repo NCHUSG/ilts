@@ -1,4 +1,4 @@
-<div id="auth_manage" class="row content tab-pane">
+<div id="auth" class="row content tab-pane">
       <div class="col-md-12 col-sm-12">
         <div>
           <h4>目前狀態</h4>

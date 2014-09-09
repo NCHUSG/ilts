@@ -7,7 +7,7 @@ class PortalController extends BaseController {
     public function login(){
 
         if (Input::has('callback')) {
-            Session::put('portal.callback', urldecode(Input::get('callback')));
+            Session::put('portal.callbackUrl', urldecode(Input::get('callback')));
         }
         else {
             Session::forget('portal.callback');
@@ -73,7 +73,7 @@ class PortalController extends BaseController {
         $oauth = array(
                     'status'    => true,
                     'provider'  => $provider->id,
-                    'user'      => $userProfile);
+                    'user'      => (object) (array) $userProfile);
 
         Session::put('oauth', $oauth);
 
@@ -89,23 +89,23 @@ class PortalController extends BaseController {
 
         $provider   = strtolower( $oauth->provider );
         $identifier = $oauth->user->identifier;
-        $email      = $oauth->user->email;
 
-        $i_u_p = IltUserProvider::where('u_p_identifier', '=', $identifier)->where('u_p_type', '=', $provider);
-        $count = $i_u_p->count();
-        $provider = $i_u_p->first();
+        $i_u_p = IltUserProvider::firstOrCreate(array('u_p_identifier' => $identifier, 'u_p_type' => $provider));
+        $user = $i_u_p->user();
 
-        if ($count == 0) {
+        if (!$user->count()) {
+            Session::put('provider',$i_u_p);
             return Redirect::route('register');
         }
 
-        $user = IltUser::where('u_id', '=', $provider->u_id)->first();
+        $user = $user->first();
 
         $session = array(   'status'    => true,
-                            'provider'  => $provider->u_p_type,
+                            'provider'  => $provider,
                             'identifier'=> $identifier,
                             'u_id'      => $user->u_id,
                             'username'  => $user->u_username,
+                            'user'      => $user,
                             'authority' => explode(',', $user->u_authority),
                             'level'     => $user->u_status);
 
@@ -114,36 +114,13 @@ class PortalController extends BaseController {
         }
 
         Session::put('user_being', $session);
-        Session::forget('oauth');
 
-        if ( true == Session::has('portal.callback')) {
+        if ( Session::has('portal.callback') ) {
 
             $callback = Session::get('portal.callback');
             Session::forget('portal.callback');
 
-            $parse_url = parse_url($callback);
-
-            $query = explode('&', $parse_url['query']);
-            $query_checked = '';
-
-            foreach ($query as $arg) {
-                $arguement = explode('=', $arg);
-                $key = $arguement[0];
-                $value = $arguement[1];
-
-                if ( !(false === stripos($value, 'http')) || !(false === stripos($value, ' ')) ) {
-                    $value = urlencode($value);
-                }
-
-                $query_checked .= empty($query) ? '' : '&';
-                $query_checked .= $key . '=' . $value;
-            }
-
-
-            $url =  $parse_url['scheme'] . '://' . $parse_url['host'] . '' .
-                    $parse_url['path'] . '?' . $query_checked;
-
-            return Redirect::to($url);
+            return Redirect::to($callback);
         }
 
         return Redirect::route('user');
@@ -152,6 +129,7 @@ class PortalController extends BaseController {
     public function register()
     {
         $oauth = (object) Session::get('oauth');
+
         $user  = $oauth->user;
         $email = $user->email;
         $username = substr($email, 0, stripos($email, '@'));
@@ -187,19 +165,21 @@ class PortalController extends BaseController {
 
     public function register_process()
     {
-
+        $result     = array();
         $rules      = Config::get('validation.CTRL.portal.register_process.rules');
         $messages   = Config::get('validation.CTRL.portal.register_process.messages');
         $validator  = Validator::make(Input::all(), $rules, $messages);
 
         if ($validator->fails())
         {
+            $result["errors"] = $validator->errors()->toArray();
             //return Redirect::to('portal/register')->withErrors($validator)->withInput();
-            return $validator->errors();
+            return Response::json($result);
             //return Redirect::route('user');
         }
         else {
             $register = (object) Session::get('register');
+            $provider = Session::get('provider');
 
             $user = new IltUser;
             $user->u_username = Input::get('username');
@@ -221,15 +201,15 @@ class PortalController extends BaseController {
             $user_opt->u_description    = Input::get('description');
             $user_opt->save();
 
-            $provider = new IltUserProvider;
             $provider->u_p_type         = $register->provider;
             $provider->u_p_identifier   = $register->identifier;
             $provider->u_p_email        = $register->email;
             $provider->u_id             = $user->u_id;
             $provider->save();
 
-            Session::forget('oauth');
             Session::forget('register');
+            Session::forget('provider');
+            Session::forget('oauth');
 
             $session = array(   'status'    => true,
                                 'provider'  => $register->provider,
@@ -245,14 +225,40 @@ class PortalController extends BaseController {
 
             Session::put('user_being', $session);
 
-            return Redirect::route('user');
+            if(IltGroup::where("g_status","like","%admin%")->count()){
+                $result["url"] = route('user');
+                return Response::json($result);
+            }
+            else{
+                $this->init_ilt($user);
+                $result["url"] = route('admin');
+                return Response::json($result);
+            }
         }
-
     }
 
     public function logout() {
         Session::forget('user_being');
         return Redirect::route('login');
+    }
+
+    private function init_ilt($user){
+        $default_value = Config::get('default');
+
+        $g_admin = new IltGroup();
+        $g_admin->g_code = $default_value['admin_group']['code'];
+        $g_admin->g_name = $default_value['admin_group']['name'];
+        $g_admin->setAdmin();
+        $g_admin->save();
+
+        $g_dev = new IltGroup();
+        $g_dev->g_code = $default_value['dev_group']['code'];
+        $g_dev->g_name = $default_value['dev_group']['name'];
+        $g_dev->setDev();
+        $g_dev->save();
+
+        $user->join($g_admin,true);
+        $user->join($g_dev,true);
     }
 
 

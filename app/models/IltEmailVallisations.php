@@ -6,4 +6,9 @@ class IltEmailVallisations extends Eloquent {
     protected $guarded      = array('id');
     protected $softDelete   = true;
 
+    public function email_validation()
+    {
+        return $this->hasOne('IltUserProvider','i_id','i_id');
+    }
+
 }

@@ -58,7 +58,7 @@ class API_ClientController extends \BaseController {
             $client->from_uri       = Input::get('input_from_uri');
             $client->redirect_uri   = Input::get('input_redirect_uri');
             $client->save();
-            return Redirect::to('./developer#projects');
+            return Redirect::to(route('dev') . '#projects');
         }
     }
 

@@ -15,7 +15,7 @@ class CreateEmailVallidations extends Migration {
         Schema::create('ilt_email_vallidations', function($table)
         {
             $table->increments('id');
-            $table->integer('u_id')->unsigned();
+            $table->integer('i_id')->unsigned();
             $table->string('type');
             $table->string('code');
             $table->string('email');

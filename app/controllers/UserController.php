@@ -3,16 +3,10 @@
 class UserController extends BaseController {
 
     protected $layout = 'master';
-    protected $user;
-
-    public function __construct() {
-        $this->user = IltUser::find(Session::get('user_being.u_id'));
-    }
 
     public function index()
     {
-        if(!$this->user)return Redirect::route('logout');
-        $user = $this->user;
+        $user = IltUser::get();
         $u_id = $user->u_id;
         $user_option = IltUserOptions::find($u_id);
         $user_providers = IltUserProvider::where('u_id', '=', $u_id)->get();
@@ -86,17 +80,73 @@ class UserController extends BaseController {
         $data['user']           = $user;
         $data['user_info']      = $user_info;
         $data['user_option']    = $user_option_info;
-        $date['is_developer']   = in_array('DEVELOPER', Session::get('user_being.authority') );
+
+        $data['isAdmin']        = $user->isAdmin();
+        $data['isDev']          = $user->isDev();
 
         $data['fields']         = Config::get('fields');
+
+        if (Session::has('message')) {
+            $data['message'] = Session::get('message');
+            Session::forget('message');
+        }
 
         return View::make('user/info', array('name' => 'user'))->with($data);
     }
 
+    public function identities()
+    {
+        $user = IltUser::get();
+
+        $result = array();
+
+        $groups = IltGroup::where('g_level_sort','=',0)->get()->all();
+
+        foreach ($groups as $key => $group) {
+            if (filter_var($group->getOption('public','false'), FILTER_VALIDATE_BOOLEAN)) {
+                $result[$group->g_code] = array(
+                    "name" => $group->g_name,
+                    'status' => 'guest',
+                    'statusText' => Config::get('fields.identity_status.guest'),
+                    "url" => array('info' => route('group',$group->g_code))
+                );
+            }
+        }
+
+        $ids = $user->identities()->get()->all();
+
+        foreach ($ids as $key => $id) {
+            $authority = $id->i_authority;
+            $group = $id->group()->first();
+            $urlTmp = array('info' => route('group',$group->g_code));
+
+            if ($authority == Config::get('sites.i_authority_admin_value'))
+                $urlTmp['ctrl'] = route('groupCtrl',$group->g_code);
+
+            $status = Config::get('sites.i_authority_value_to_readable.'.$authority);
+
+            $statusText = Config::get('fields.identity_status.' . $status);
+
+            $result[$group->g_code] = array(
+                "name" => $group->g_name,
+                'status' => $status,
+                'statusText' => $statusText,
+                "url" => $urlTmp
+            );
+        }
+
+        $result = array(
+            'groups' => $result,
+            'more' => false,
+            'nextUrl' => route('identities'),
+        );
+
+        return Response::json($result);
+    }
+
     public function apply_developer()
     {
-        if(!$this->user)return Redirect::route('logout');
-        $user = $this->user;
+        $user = IltUser::get();
 
         if ( false !== stripos($user->u_authority, 'DEVELOPER' )) {
             return Redirect::action('DeveloperController@index');
@@ -141,9 +191,8 @@ class UserController extends BaseController {
     }
 
     public function email_vallidate($type, $code) {
-        if(!$this->user)return Redirect::route('logout');
+        $user = IltUser::get();
         $type = strtoupper($type);
-        $user = $this->user;
         $email_orm = IltEmailVallisations::where('type', '=', $type)
                                      ->where('code', '=', $code)
                                      ->where('expires', '>', date('Y-m-d'))
@@ -177,8 +226,7 @@ class UserController extends BaseController {
     }
 
     public function update_info($type){
-        if(!$this->user)return Redirect::route('logout');
-        $user = $this->user;
+        $user = IltUser::get();
 
         $availible_type = array('basic','option');
         if(!in_array($type, $availible_type))

@@ -112,9 +112,9 @@ return array(
         'portal' => array(
             'register_process' => array(
                 'rules' => array(
-                    'username'    => 'required|alpha_dash',
+                    'username'    => 'required|alpha_dash|unique:ilt_users,u_username',
                     'nickname'    => 'required',
-                    'email'       => 'required|email',
+                    'email'       => 'required|email|unique:ilt_users,u_email',
                     'first_name'  => '',
                     'last_name'   => '',
                     'gender'      => '',
@@ -132,7 +132,8 @@ return array(
                     'url'           => '本欄位選項請符合網址(url)格式（Ex. http://www.foo.com ）。',
                     'numeric'       => '本欄位選項請符合純數字格式。',
                     'date'          => '本欄位選項請輸入有效的日期範圍。',
-                    'date_format'   => '本欄位選項請符合純日期（yyyy/mm/dd）格式。'
+                    'date_format'   => '本欄位選項請符合純日期（yyyy/mm/dd）格式。',
+                    'unique'        => '本欄位選項內容已經被使用過了...',
                 )
             )
         ),
@@ -179,6 +180,65 @@ return array(
                     'accepted'  => '您必須同意條款才能成為開發者！',
                 )
             )
+        ),
+        'options' => array(
+            'rules' => array(
+                'allow_create_root_group' => 'required|in:true,false',
+            ),
+            'messages' => array(
+                'required'      => '本欄位選項是必填的!',
+                'in'    => '本欄位選項必需為 true 或 false!',
+            ),
+        ),
+        'group' => array(
+            'rules' => array(
+                'name' => 'required',
+                'code' => 'required|alpha|unique:ilt_groups,g_code',
+                'description' => '',
+                'email' => '',
+
+                'public' => 'required|in:true,false',
+                'joinByAllow' => 'required|in:true,false',
+                'directJoinable_by_StudentEmailValidation' => 'required|in:true,false',
+                'directJoinable_by_EmailValidation' => 'required|in:true,false',
+                'directJoinable' => 'required|in:true,false',
+
+                'allow_member_create_child_group' => 'required|in:true,false',
+
+                'allow_guest_see_child_group' => 'required|in:true,false',
+                'allow_guest_see_members' => 'required|in:true,false',
+                'allow_members_see_child_group' => 'required|in:true,false',
+                'allow_members_see_members' => 'required|in:true,false',
+
+            ),
+            'messages' => array(
+                'alpha'    => '必須完全為英文字母!',
+                'unique'   => '這個簡稱已經被使用過了...',
+                'required' => '本欄位選項是必填的!',
+                'in'       => '本欄位選項必需為 true 或 false!',
+            ),
+        ),
+        'process_join_by_email' => array(
+            'directJoinable_by_StudentEmailValidation' => array(
+                'rules' => array(
+                    'email' => array('required', 'email',
+                                     'regex:/^[a-zA-Z0-9._-]+@mail\.[a-zA-Z0-9.-]+\.edu\.tw$/'),
+                ),
+                'messages' => array(
+                    'email.required'        => '學校信箱欄位必須填寫！',
+                    'email.email'           => '學校信箱欄位必須是正常的email格式',
+                    'email.regex'           => '學校信箱欄位必須以@mail.xxx.edu.tw為位址。',
+                ),
+            ),
+            'directJoinable_by_EmailValidation' => array(
+                'rules' => array(
+                    'email' => array('required', 'email'),
+                ),
+                'messages' => array(
+                    'email.required'        => '信箱欄位必須填寫！',
+                    'email.email'           => '信箱欄位必須是正常的email格式',
+                ),
+            ),
         ),
         'student' => array(
             'apply_email_process' => array(
