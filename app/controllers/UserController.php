@@ -144,85 +144,47 @@ class UserController extends BaseController {
         return Response::json($result);
     }
 
-    public function apply_developer()
-    {
-        $user = IltUser::get();
+    public function email_validation($code) {
 
-        if ( false !== stripos($user->u_authority, 'DEVELOPER' )) {
-            return Redirect::action('DeveloperController@index');
-        }
+        try {
+            $user = IltUser::get();
 
-        if(Input::has('agree')) {
-            $this->beforeFilter('csrf', array('on' => 'post'));
+            $email_orm = IltEmailVallisations::where('code', '=', $code)->where('expires', '>', date('Y-m-d'))->first();
 
-            $rules      = Config::get('validation.CTRL.user.apply_developer.rules');
-            $messages   = Config::get('validation.CTRL.user.apply_developer.messages');
-            $validator  = Validator::make(Input::all(), $rules, $messages);
+            if (!$email_orm)
+                throw new Exception("查無此驗證碼或者已經過期！");
 
-            if ($validator->fails()) {
-                return Redirect::action('UserController@apply_developer')->withErrors($validator)->withInput();
+            $id = $email_orm->identity()->first();
+
+            // 由使用者自行發出加入請求，會先建立一個 pending 的 identity
+            if ($id) {
+                if ($id->user()->first()->getKey() != $user->getKey())
+                    throw new Exception("驗證身分不符！");
+
+                if ($id->member_or_higher())
+                    throw new Exception("您已經驗證過了！");
+
+                $id->setMember();
+
+                if ($email_orm == Config::get('sites.email_StudentEmailValidation_type_value')) {
+                    # 可以在這裡插入一份 ilt_user_students
+                }
+
+                Session::put('message',array('status' => 'success', 'content' => Config::get('fields.email_validation_ok_msg')));
+                return Redirect::route('group',$id->group()->first()->g_code);
             }
-            else {
-                $user = IltUser::find(Session::get('user_being.u_id'));
-
-                if( empty($user->u_authority) ) {
-                    $user->u_authority = 'DEVELOPER';
-                }
-                else {
-                    $user->u_authority .= ',DEVELOPER';
-                }
-
-                $user->save();
-
-                $session['authority'] = explode(',', $user->u_authority);
-
-                if ( !is_array($session['authority']) ) {
-                    $session['authority'] = array($session['authority']);
-                }
-
-                Session::put('user_being.authority', $session['authority']);
-
-                return Redirect::action('DeveloperController@index');
+            else if (strpos($email_orm->type, Config::get('sites.email_invitaion_type_prefix')) === 0){
+                // 由群組發出加入邀請， i_id 值為 0 ，理論上找不到 identity
+                $group = IltGroup::get(str_replace(Config::get('sites.email_invitaion_type_prefix'), '', $email_orm->type));
+                IltIdentity::member($user,$group);
+                Session::put('message',array('status' => 'success', 'content' => Config::get('fields.email_invitaion_ok_msg')));
+                return Redirect::route('group',$id->group()->first()->g_code);
             }
-        }
-        else {
-            return View::make('developer/terms');
-        }
-    }
 
-    public function email_vallidate($type, $code) {
-        $user = IltUser::get();
-        $type = strtoupper($type);
-        $email_orm = IltEmailVallisations::where('type', '=', $type)
-                                     ->where('code', '=', $code)
-                                     ->where('expires', '>', date('Y-m-d'))
-                                     ->first();
-
-        if ( false !== stripos($user->u_authority, $type )) {
-            return View::make('user.email_vallidate_result', array('status' => 'already'));
+        } catch (Exception $e) {
+            Session::put('message',array('status' => 'danger', 'content' => Config::get('fields.email_validation_error_msg') . " : " . $e->getMessage()));
+            return Redirect::route('user');
         }
-        elseif ( $email_orm == null ) {
-            return View::make('user.email_vallidate_result', array('status' => 'not_found'));
-        }
-        elseif ( $email_orm->u_id != Session::get('user_being.u_id') ) {
-            return View::make('user.email_vallidate_result', array('status' => 'not_match'));
-        }
-
-        $email = $email_orm->email;
-        $email_orm->delete();
-
-        switch ($type) {
-            case 'STUDENT':
-                $student = new IltUserStudent;
-                $student->u_id       = Session::get('user_being.u_id');
-                $student->email      = $email;
-                $student->save();
-                return Redirect::action('StudentController@apply_files_process');
-
-            default:
-                return View::make('user.email_vallidate_result', array('status' => 'success'));
-        }
-
     }
 
     public function update_info($type){

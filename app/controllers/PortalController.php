@@ -7,7 +7,7 @@ class PortalController extends BaseController {
     public function login(){
 
         if (Input::has('callback')) {
-            Session::put('portal.callbackUrl', urldecode(Input::get('callback')));
+            Session::put('portal.callback', urldecode(Input::get('callback')));
         }
         else {
             Session::forget('portal.callback');
@@ -120,6 +120,9 @@ class PortalController extends BaseController {
             $callback = Session::get('portal.callback');
             Session::forget('portal.callback');
 
+            // var_dump($callback);
+            // die();
+
             return Redirect::to($callback);
         }
 
@@ -225,15 +228,21 @@ class PortalController extends BaseController {
 
             Session::put('user_being', $session);
 
-            if(IltGroup::where("g_status","like","%admin%")->count()){
-                $result["url"] = route('user');
-                return Response::json($result);
+            if ( Session::has('portal.callback') ) {
+
+                $callback = Session::get('portal.callback');
+                Session::forget('portal.callback');
+
+                $result["url"] = $callback;
             }
-            else{
+            else
+                $result["url"] = route('user');
+
+            if(!IltGroup::where("g_status","like","%admin%")->count()){
                 $this->init_ilt($user);
                 $result["url"] = route('admin');
-                return Response::json($result);
             }
+            return Response::json($result);
         }
     }
 

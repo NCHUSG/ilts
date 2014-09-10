@@ -6,7 +6,7 @@ class OAuthController extends BaseController {
 
     public function __construct()
     {
-        header('X-XRDS-Location: ' . action('OAuthController@header'));
+        header('X-XRDS-Location: ' . route('oauthHeader'));
     }
 
     public function index()
@@ -21,7 +21,8 @@ class OAuthController extends BaseController {
         if ( true === empty($client_key) ) {
 
             if( true !== Session::has('auth_srv.client_key') ) {
-                return Redirect::action('OAuthController@argument_losing');
+                // return Redirect::route('oauthErr001');
+                return $this->error('argument_losing');
             }
 
             $client_key = Session::get('auth_srv.client_key');
@@ -32,7 +33,8 @@ class OAuthController extends BaseController {
 
         // Client 存在檢查
         if ( 0 == $client_query->count() ) {
-            return Redirect::action('OAuthController@client_no_exist');
+            // return Redirect::route('oauthErr002');
+            return $this->error('client_no_exist');
         }
 
         $client          = $client_query->first();
@@ -43,22 +45,49 @@ class OAuthController extends BaseController {
 
         // 強化安全性，增加來Client要求轉換的網址是否正常的判斷。
         if ( false === stripos($access_redirect, $redirect_uri) ) {
-            exit('redirect_uri not valid');
+            // exit('redirect_uri not valid');
+            return $this->error('redirect_uri_not_valid',"this redirect_uri is '{$redirect_uri}'");
         }
 
-        $scope       = str_replace('+', ' ', Input::get('scope'));
+        // 把奇怪的 scope 濾掉
+        $scope_set = explode('+', Input::get('scope'));
+        $available_scope = Config::get('sites.oauth_scope');
+        $scope  = array();
+
+        foreach ($scope_set as $key => $scope_e) {
+            if (in_array($scope_e, $available_scope)) {
+                $scope[] = $scope_e;
+                unset($scope_set[$key]);
+            }
+        }
+
+        $available_scope = Config::get('sites.oauth_scope_id_prefix');
+
+        $scope_identity  = array();
+
+        foreach ($scope_set as $i => $scope_e) {
+            foreach ($available_scope as $j => $value) {
+                if (strpos($scope_e,$value) === 0) {
+                    $scope_identity[] = $scope_e;
+                    unset($scope_set[$key]);
+                }
+            }
+        }
+
+        if (!(count($scope) + count($scope_identity)))
+            return $this->error('no_available_scope');
+
         $expires     = Input::has('expires') ? Input::get('expires') : 180;
-        $u_id        = Session::get('user_being.u_id');
+        $u_id        = IltUser::get()->getKey();
         $token_query = OAuthAccessToken::where('client_id', '=', $client->client_id)->where('user_id', '=', $u_id);
 
-        if ( 1 == $token_query->count() ) {
-
+        if ( $token_query->count() ) {
             $token_obj = $token_query->first();
             $token = $token_obj->access_token;
 
             # TODO: token放在網址有其風險性，未來需要強化安全性。   // 其實好像還好？
 
-            if ($scope == $token_obj->scope) {
+            if (implode(' ', array_merge($scope,$scope_identity)) == $token_obj->scope) {
                 $delimiter = (false === stripos($redirect_uri, '?')) ? '?' : '&' ;
                 return Redirect::to($redirect_uri . $delimiter . 'token=' . $token);
             }
@@ -68,6 +97,7 @@ class OAuthController extends BaseController {
         Session::put('iltOAuth.client_key', $client_key);
         Session::put('iltOAuth.callback', 'http://' . $_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
         Session::put('iltOAuth.scope', $scope);
+        Session::put('iltOAuth.scope_identity', $scope_identity);
         Session::put('iltOAuth.expires', $expires);
         Session::put('iltOAuth.redirect_uri', $redirect_uri);
         Session::put('iltOAuth.auth2res_own', true);
@@ -76,9 +106,7 @@ class OAuthController extends BaseController {
         # TODO: 以client id取代client key。     // 忘記為啥要這樣做了
 
         // 轉移到授權頁面，並附上client_key，讓頁面知道是哪個Client。
-        return Redirect::action('OAuthController@resource_owner');
-
-
+        return Redirect::route('oauthOwner');
     }
 
     # TODO: 增加Scope到參數裡
@@ -96,14 +124,14 @@ class OAuthController extends BaseController {
         $client_key      = $iltOAuth['client_key'];
         $callback_uri    = $iltOAuth['callback'];
         $scope           = $iltOAuth['scope'];
+        $scope_identity  = $iltOAuth['scope_identity'];
         $expires         = $iltOAuth['expires'];
         $redirect_uri    = $iltOAuth['redirect_uri'];
 
         $client_query    = OAuthClient::where('client_key', '=', $client_key);
 
-        if ( 0 == $client_query->count() ) {
-            return Redirect::action('OAuthController@client_no_exist');
-        }
+        if ( 0 == $client_query->count() )
+            return $this->error('client_no_exist');
 
         $client      = $client_query->first();
         $project     = OAuthProject::find($client->project_id);
@@ -111,39 +139,46 @@ class OAuthController extends BaseController {
         // 檢查是否收到表單Post信息，若無則轉成確認頁面，若有則開始處理。
         if ( false == Input::has('request_submit') ) {
 
-            # TODO: 將Scopes翻譯成Require
-            $require = explode(' ', $scope);
-            $icon = '<span class="glyphicon glyphicon-check"></span> ';
+            $require = array();
+            $scope_hash = Config::get('fields.oauth_scope');
 
-            $require_list   = '';
-            $scope_hash     = Config::get('sites.oauth_scope');
+            foreach ($scope as $value)
+                $require[$value] = $scope_hash[$value];
 
-            foreach ($require as $value) {
-                $scope_desciption = $scope_hash[$value];
-                $require_list .= "<p>{$icon}{$scope_desciption}</p>";
+            $scope_hash = Config::get('fields.oauth_scope_id');
+            $oauth_scope_id_prefix = Config::get('sites.oauth_scope_id_prefix');
+
+            foreach ($scope_identity as $value) {
+                $extracted = $this->extractIdScope($value);
+                if ($extracted[0])
+                    $require[$value] = str_replace('{group}',$extracted[0]->g_name , $scope_hash[$extracted[1]]);
+                else
+                    $require[$value] = str_replace('{group}',"[Unknown]" , $scope_hash[$extracted[1]]);
             }
 
             $manager = IltUser::find($project->developer_id);
 
             $data['app_info']       = "{$manager->u_nick} ({$manager->u_username}) [{$manager->u_email}]";
             $data['app_describe']   = $project->describe;
-            $data['action']     = action('OAuthController@resource_owner');
+            $data['action']     = route('oauthOwner');
             $data['app_name']   = $project->name;
-            $data['require']    = $require_list;
+            $data['require']    = $require;
+            $data['expires']    = date('Y-m-d', time() + $expires * 24 * 3600);
 
             Session::put('iltOAuth', $iltOAuth);
             return View::make('oauth/cofirm_client', $data);
         }
         else {
-
             // 使用者是否同意授權，若同意及產生Token回傳callback，若反對則傳回原應用程式位置
             if ( 'true' == Input::get('request_answer' )) {
-                $origin_token = OAuthAccessToken::where('user_id', '=', $u_id)->first();
+                $origin_token = OAuthAccessToken::where('user_id', '=', $u_id)->where('client_id', '=', $client->getKey())->first();
                 if ( $origin_token != null ) {
                     $origin_token->delete();
                 }
 
-                $token = md5($this->generateKey(true));
+                $token = $this->generateKey(true);
+                $scope = array_merge($scope,$scope_identity);
+                $scope = implode(' ', $scope);
 
                 $access_token = new OAuthAccessToken;
                 $access_token->access_token = $token;
@@ -155,9 +190,13 @@ class OAuthController extends BaseController {
 
                 Session::put('iltOAuth', $iltOAuth);
                 Session::put('auth_srv.client_key', $client_key);
+                // var_dump("01");
+                // die();
                 return Redirect::to($callback_uri);
             }
             else {
+                // var_dump("02");
+                // die();
                 return Redirect::to($redirect_uri);
             }
         }
@@ -262,6 +301,41 @@ class OAuthController extends BaseController {
                     $data['student']['department']  = $is_stu ? $depart_hash[$user_stu->department] : null;
                     $data['student']['grade']       = $is_stu ? $user_stu->grade : null;
                     break;
+
+                # 取得學生擁有身分與否
+                default:
+                    $extracted = $this->extractIdScope($value);
+                    // $data = $extracted;
+
+                    if (!$extracted)
+                        throw new Exception("Invalid Scope");
+
+                    $group = $extracted[0];
+                    $code = $group->g_code;
+
+                    // $data['test'] = $group->g_name;
+                    // $data['test1'] = $user->u_username;
+                    // $data['test2'] = IltIdentity::isMember($user,$group);
+                    // $data['test3'] = $group ? IltIdentity::isMember($user,$group) : false;
+                        
+                    switch ($extracted[1]) {
+                        case 'user.isIn.':
+                            $data['isIn'][$code] = $group ? IltIdentity::memberOrHigher($user,$group) : false;
+                            break;
+                        case 'user.isMemberOf.':
+                            $data['isMemberOf'][$code] = $group ? IltIdentity::isMember($user,$group) : false;
+                            break;
+                        case 'user.isAdminOf.':
+                            $data['isAdminOf'][$code] = $group ? IltIdentity::isAdmin($user,$group) : false;
+                            break;
+                        case 'user.isPendingOf.':
+                            $data['isPendingOf'][$code] = $group ? IltIdentity::isPending($user,$group) : false;
+                            break;
+                        default:
+                            throw new Exception("Invalid Scope");
+                            break;
+                    }
+                    break;
             }
         }
 
@@ -280,25 +354,63 @@ class OAuthController extends BaseController {
 
     }
 
-    public function argument_losing()
+    private function error($e,$more_info = false)
+    {
+        $error = array();
+        switch ($e) {
+            case 'argument_losing':
+                $error[] = "參數有缺失";
+                $error[] = "參數無效";
+                break;
+            case 'client_no_exist':
+                $error[] = "尚未註冊完成";
+                $error[] = "辨識代碼錯誤";
+                $error[] = "已經被停權";
+                break;
+            case 'redirect_uri_not_valid':
+                $error[] = "錯誤或是無效的 redirect_uri";
+                break;
+            case 'no_available_scope':
+                $error[] = "沒有可用的 scope";
+                break;
+            default:
+                $error[] = "未知的錯誤...";
+                break;
+        }
+
+        if ($more_info)
+            $error[] = $more_info;
+
+        $data = array("error" => $error);
+        return View::make('oauth/error', $data);
+    }
+
+    public function argument_losing() // 001
     {
         return View::make('oauth/argument_losing');
     }
 
-    public function client_no_exist()
+    public function client_no_exist() // 002
     {
         return View::make('oauth/client_no_exist');
     }
 
-    private function generateKey ( $unique = false )
+    private function generateKey($unique = false)
     {
-        $key = md5(uniqid(rand(), true));
+        $key = md5(rand());
         if ($unique)
-        {
-            list($usec,$sec) = explode(' ',microtime());
-            $key .= dechex($usec).dechex($sec);
-        }
+            while (OAuthAccessToken::get($key))
+                $key = md5($key + rand());
         return $key;
+    }
+
+    private function extractIdScope($scope)
+    {
+        $oauth_scope_id_prefix = Config::get('sites.oauth_scope_id_prefix');
+        foreach ($oauth_scope_id_prefix as $key => $prefix)
+            if (strpos($scope,$prefix) === 0)
+                return array(IltGroup::get(str_replace($prefix, '', $scope)),$prefix);
+        return false;
     }
 
 }

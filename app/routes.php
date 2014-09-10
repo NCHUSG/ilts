@@ -50,11 +50,11 @@ Route::group(array('before' => 'auth_only'), function()
     ## 使用者頁面
     Route::get('/user/info', array( 'uses' => 'UserController@index', 'as' => 'user'));
 
-    Route::get('/email_vallidation/{type}/{code}', array( 'uses'=> 'UserController@email_vallidate'));
-
     Route::get('/user/identities', array( 'uses' => 'UserController@identities', 'as' => 'identities'));
 
     Route::post('/update_info/{type}', array( 'uses' => 'UserController@update_info', 'as' => 'update_info', 'before' => 'csrf'));
+
+    Route::get('/email_validation/{code}', array( 'uses'=> 'UserController@email_validation', 'as' => 'emailValidation'));
 
     ## 群組介面
     Route::group(array('before' => 'group'), function()
@@ -62,6 +62,8 @@ Route::group(array('before' => 'auth_only'), function()
         Route::get('/group/info/{code}', array( 'uses' => 'GroupController@index', 'as' => 'group'));
 
         Route::get('/group/under/{code}', array( 'uses' => 'GroupController@subGroups', 'as' => 'subGroup', 'before' => 'groupUnder'));
+
+        Route::get('/group/member/{code}', array( 'uses' => 'GroupController@member', 'as' => 'member', 'before' => 'groupMember'));
 
         Route::get('/group/join/{code}/{method}', array( 'uses' => 'GroupController@join', 'as' => 'join'));
 
@@ -80,14 +82,6 @@ Route::group(array('before' => 'auth_only'), function()
         });
     });
 
-    ## 管理者專區。只有已登入的管理者可以看的路由，其餘者訪問本區直接轉入使用者頁面，
-    Route::group(array('before' => 'admin_only'), function()
-    {
-        Route::get('/admin' , array( 'uses' => 'AdminController@index', 'as' => 'admin'));
-
-        Route::post('/admin/options' , array( 'uses' => 'AdminController@option', 'as' => 'siteOption', 'before' => 'csrf'));
-    });
-
     ## 創建根群組
     Route::group(array('before' => 'creatRootGroup'), function()
     {
@@ -96,13 +90,33 @@ Route::group(array('before' => 'auth_only'), function()
         Route::post('/group/create' , array( 'uses' => 'GroupController@create_process', 'as' => 'createRootGroupProcess', 'before' => 'csrf'));
     });
 
-    Route::get('user/apply/developer', array( 'uses' => 'UserController@apply_developer'));
-    Route::post('user/apply/developer', array( 'uses' => 'UserController@apply_developer'));
+    ## 管理者專區。只有已登入的管理者可以看的路由，其餘者訪問本區直接轉入使用者頁面，
+    Route::group(array('before' => 'admin_only'), function()
+    {
+        Route::get('/admin' , array( 'uses' => 'AdminController@index', 'as' => 'admin'));
+
+        Route::post('/admin/options' , array( 'uses' => 'AdminController@option', 'as' => 'siteOption', 'before' => 'csrf'));
+    });
+
+    ## 開發者專區。只有已登入的管理者可以看的路由，其餘者訪問本區直接轉入使用者頁面，
+    Route::group(array('before' => 'dev_only'), function()
+    {
+        Route::get('/dev' , array( 'uses' => 'DeveloperController@index', 'as' => 'dev'));
+
+        Route::group(array('prefix' => 'v1/res/'), function()
+        {
+            Route::resource('projects', 'API_ProjectController', array('as' => 'project'));
+            Route::resource('clients', 'API_ClientController', array('as' => 'client'));
+        });
+    });
+
+    // Route::get('user/apply/developer', array( 'uses' => 'UserController@apply_developer'));
+    // Route::post('user/apply/developer', array( 'uses' => 'UserController@apply_developer'));
 
     // Route::get('developer', array( 'uses' => 'DeveloperController@index'));
     // Route::get('admin', array( 'uses' => 'AdminController@index'));
 
-    Route::get('/dev' , array( 'uses' => 'DeveloperController@index', 'as' => 'dev'));
+    
 });
 
 ## 登出程序
@@ -112,30 +126,30 @@ Route::get('/logout', array(  'uses' => 'PortalController@logout',
 # Filter：OAUTH專區。
 Route::group(array(), function()
 {
-    Route::group(array('before' => 'oauth_only'), function()
+    Route::group(array('before' => 'auth_only'), function()
     {
-        Route::get('oauth/header', array( 'uses' => 'OAuthController@header'));
-        Route::get('oauth/error001', array( 'uses' => 'OAuthController@argument_losing'));
-        Route::get('oauth/error002', array( 'uses' => 'OAuthController@client_no_exist'));
+        Route::get('oauth/header', array( 'uses' => 'OAuthController@header', 'as' => 'oauthHeader'));
+        Route::get('oauth/error001', array( 'uses' => 'OAuthController@argument_losing', 'as' => 'oauthErr001'));
+        Route::get('oauth/error002', array( 'uses' => 'OAuthController@client_no_exist', 'as' => 'oauthErr002'));
 
         Route::get('oauth/auth_server/{client_key?}' ,
-            array( 'uses' => 'OAuthController@auth_server'));
+            array( 'uses' => 'OAuthController@auth_server', 'as' => 'oauthServer'));
 
         Route::get('oauth/resource_owner' ,
-            array( 'uses' => 'OAuthController@resource_owner'));
+            array( 'uses' => 'OAuthController@resource_owner', 'as' => 'oauthOwner'));
 
         Route::post('oauth/resource_owner' ,
-            array( 'uses' => 'OAuthController@resource_owner'));
+            array( 'uses' => 'OAuthController@resource_owner', 'as' => 'oauthOwner'));
     });
 
-    Route::get('oauth/resource_server/', array( 'uses' => 'OAuthController@resource_server'));
+    Route::get('oauth/resource_server/', array( 'uses' => 'OAuthController@resource_server', 'as' => 'oauthRes'));
 });
 
 # API
-Route::group(array('prefix' => 'v1/res/'), function()
-{
-    Route::resource('projects', 'API_ProjectController', array('as' => 'project'));
-    Route::resource('clients', 'API_ClientController', array('as' => 'client'));
-});
+// Route::group(array('prefix' => 'v1/res/'), function()
+// {
+//     Route::resource('projects', 'API_ProjectController', array('as' => 'project'));
+//     Route::resource('clients', 'API_ClientController', array('as' => 'client'));
+// });
 
 Route::get('test', array('uses' => 'TestController@main'));

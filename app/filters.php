@@ -111,7 +111,7 @@ Route::filter('auth_only', function()
     // 如果還沒登入，會轉移到登入頁面。
     try {
         if (!IltUser::get()) {
-            $current_uri = urlencode(Request::url());
+            $current_uri = urlencode(Request::fullUrl());
             return Redirect::to( action('PortalController@login') . '?callback=' . $current_uri);
         }
     } catch (Exception $e) {
@@ -222,6 +222,18 @@ Route::filter('groupAdmin', function($route, $request)
     }
 });
 
+Route::filter('creatRootGroup', function()
+{
+    try {
+        if (!(IltUser::get()->isAdmin() || filter_var(IltSiteOptions::get('allow_create_root_group'), FILTER_VALIDATE_BOOLEAN))) {
+            Session::put('message',array('status' => 'danger', 'content' => '你沒有使用本功能的權限！'));
+            return Redirect::route('user');
+        }
+    } catch (Exception $e) {
+        return Redirect::route('logout');
+    }
+});
+
 Route::filter('admin_only', function()
 {
     try {
@@ -234,10 +246,10 @@ Route::filter('admin_only', function()
     }
 });
 
-Route::filter('creatRootGroup', function()
+Route::filter('dev_only', function()
 {
     try {
-        if (!(IltUser::get()->isAdmin() || filter_var(IltSiteOptions::get('allow_create_root_group'), FILTER_VALIDATE_BOOLEAN))) {
+        if (!IltUser::get()->isDev()) {
             Session::put('message',array('status' => 'danger', 'content' => '你沒有使用本功能的權限！'));
             return Redirect::route('user');
         }

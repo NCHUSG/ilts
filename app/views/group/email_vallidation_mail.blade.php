@@ -4,11 +4,11 @@
   </p>
 
   <p>
-    歡迎您認證{{$unit}}伊爾特系統的學生身份.
+    歡迎您透過 {{ $method }} 認證 [{{$unit}}] 伊爾特系統的 {{$group_name}} 身份.
   </p>
 
   <p>
-    請點選下方連結驗證您的學生身份：<br/>
+    請點選下方連結驗證您的 {{$group_name}} 身份：<br/>
     <a href="{{$link}}" target="_blank">{{$link}}</a>
   </p>
 

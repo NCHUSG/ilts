@@ -168,6 +168,24 @@ class IltIdentity extends Eloquent {
         return IltIdentity::establish($user,$group,Config::get('sites.i_authority_pending_value'));
     }
 
+    public function setAdmin()
+    {
+        $this->i_authority = Config::get('sites.i_authority_admin_value');
+        return $this->save();
+    }
+
+    public function setMember()
+    {
+        $this->i_authority = Config::get('sites.i_authority_member_value');
+        return $this->save();
+    }
+
+    public function setPending()
+    {
+        $this->i_authority = Config::get('sites.i_authority_pending_value');
+        return $this->save();
+    }
+
     public function user()
     {
         return $this->hasOne('IltUser','u_id','u_id');

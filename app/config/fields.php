@@ -158,5 +158,36 @@ return array(
         'pending' => '等待加入確認',
         'member' => '群組中的一員',
         'admin' => '具有管理權限',
+    ),
+
+    'email_validation_title' => array(
+        'en' => 'Identity Confirm',
+        'zh_TW' => '身份確認信',
+    ),
+
+    'email_validation_error_msg' => '錯誤的信箱驗證！',
+    'email_validation_ok_msg' => '信箱認證完成！',
+    'email_invitaion_ok_msg' => '邀請認證完成！',
+
+    'oauth_scope' => array(
+        'user.login.basic'     => '可以得知是否擁有本系統使用者權限',
+        'user.login.student'   => '可以得知是否擁有本系統學生權限',
+        'user.login.developer' => '可以得知是否擁有本系統開發者權限',
+        'user.info.basic'    => '可以取得使用者基本資料（使用者名稱、信箱）',
+        'user.info.internet' => '可以取得使用者網路資料（網站網址、Gravatar頭像位址、自我敘述）',
+        'user.info.personal' => '可以取得使用者個人資料（姓名、性別、生日、電話、地址）',
+        'user.info.student'  => '可以取得使用者學生資料（學校信箱、學號、科系、年級）',
+    ),
+
+    'oauth_scope_id' => array(
+        'user.isIn.'  => '可以取得使用者是否為 {group} 的成員',
+        'user.isMemberOf.'  => '可以取得使用者是否為 {group} 的一般成員',
+        'user.isAdminOf.'  => '可以取得使用者是否為 {group} 的管理員',
+        'user.isPendingOf.'  => '可以取得使用者是否為 {group} 的待核准成員',
+    ),
+
+    'email_form_message' => array(
+        'directJoinable_by_StudentEmailValidation' => '請輸入學生信箱',
+        'directJoinable_by_EmailValidation' => '請輸入電子信箱',
     )
 );

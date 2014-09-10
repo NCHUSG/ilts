@@ -77,6 +77,11 @@ class GroupController extends BaseController {
             $data['display_create'] = false;
         }
 
+        if (Session::has('message')) {
+            $data['message'] = Session::get('message');
+            Session::forget('message');
+        }
+
         // var_dump($options);
         // var_dump($data);
         // die();
@@ -280,7 +285,7 @@ class GroupController extends BaseController {
             );
             $result['postURL'] = route('join',array($group->g_code,$method));
             if(Request::isMethod('get')){
-                $result['message'] = '請輸入學生信箱';
+                $result['message'] = Config::get('fields.email_form_message.' . $method);
                 $result['status'] = 'info';
             }
             else{
@@ -290,7 +295,12 @@ class GroupController extends BaseController {
         }
         else{
             $id = IltIdentity::pending($user,$group);
+
             $code = md5( time() + $user->u_username );
+            while(IltEmailVallisations::where('code','=',$code)->count()){
+                $code = md5( $code + $user->u_username );
+            }
+
             $email = new IltEmailVallisations;
             $email->i_id    = $id->getKey();
             $email->type    = $method;
@@ -301,15 +311,17 @@ class GroupController extends BaseController {
 
             $data = array(
                 'username'  => $user->u_username,
+                'group_name'=> $group->g_name,
+                'method'    => Config::get('fields.join_method.' . $method . '.zh_TW'),
                 'unit'      => Config::get('sites.name'),
-                'link'      => action( 'UserController@email_vallidate', array('student', $code) )
+                'link'      => route('emailValidation',$code),
             );
 
-            Mail::send('student.email_vallidation_mail', $data, function($message)
+            Mail::send('group.email_vallidation_mail', $data, function($message)
             {
                 $message
                 ->to( Input::get('email'), IltUser::get()->u_username )
-                ->subject('伊爾特系統 身份確認信');
+                ->subject('[' . Config::get('sites.name') . '] ' . Config::get('fields.email_validation_title.zh_TW'));
             });
 
             $result['message'] = '已發出信件，請至信箱內確認！';

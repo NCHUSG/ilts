@@ -13,6 +13,12 @@ class AdminController extends BaseController {
         $data['site_option'] = $site_option;
 
         $data['fields'] = Config::get('fields');
+
+        if (Session::has('message')) {
+            $data['message'] = Session::get('message');
+            Session::forget('message');
+        }
+        
         return View::make('admin/info')->with($data);
     }
 

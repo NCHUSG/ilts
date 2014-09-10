@@ -4,20 +4,7 @@
 
     <script>
       var isSuccess,refresh,redirect,form,postURL;
-
-      function startAjax(){
-        $('div#infobox h4.modal-title').text("發出加入請求...");
-        $('div#infobox h3.text-center').show().text("請稍等...");
-        $('div#infobox div.alert').hide();
-        $('div#infobox #noTrespassingOuterBarG').show();
-        $('div#infobox').modal({
-          keyboard: false
-        });
-
-        $('form#join_form').slideUp(function(){
-          $('form#join_form').remove();
-        })
-      }
+      var ajaxSuccess,ajaxError,ajaxCompleted,startAjax;
 
       function ajaxSuccess(data){
         var alertbox = $('div#infobox div.alert');
@@ -71,15 +58,7 @@
           formTmp.append($('<div class="row">&nbsp;</div>'))
           formTmp.append($('<button type="submit" class="btn btn-primary btn-lg btn-block">送出</button>'))
           formTmp.submit(function(){
-            startAjax();
-            $.ajax({
-              type:'POST',
-              url: $(this).attr('action'),
-              data: $(this).serializeArray(),
-              success: ajaxSuccess,
-              error: ajaxError,
-              complete: ajaxCompleted,
-            });
+            startAjax($(this).attr('action'),$(this).serializeArray());
             return false;
           });
           $('div#infobox div.modal-body').append(formTmp);
@@ -87,19 +66,49 @@
         }
       }
 
+      function startAjax(url,data){
+        $('div#infobox h4.modal-title').text("發出加入請求...");
+        $('div#infobox h3.text-center').show().text("請稍等...");
+        $('div#infobox div.alert').hide();
+        $('div#infobox #noTrespassingOuterBarG').show();
+        $('div#infobox').modal({
+          keyboard: false
+        });
+
+        function ajaxCore(){
+          if(data)
+            $.ajax({
+              type:'POST',
+              url: url,
+              data: data,
+              success: ajaxSuccess,
+              error: ajaxError,
+              complete: ajaxCompleted,
+            });
+          else
+            $.ajax({
+              type:'GET',
+              url: url,
+              success: ajaxSuccess,
+              error: ajaxError,
+              complete: ajaxCompleted,
+            });
+        }
+
+        if($('form#join_form').is('form'))
+          $('form#join_form').slideUp(function(){
+            $('form#join_form').remove();
+            ajaxCore();
+          });
+        else
+          ajaxCore();
+      }
+
       $('#start_join a').click(function(){
         console.log("!!!");
 
-        startAjax();
+        startAjax($(this).attr('href'));
 
-        $.ajax({
-          type: "GET",
-          //data: form_data,
-          url: $(this).attr('href'),
-          success: ajaxSuccess,
-          error: ajaxError,
-          complete:ajaxCompleted,
-        });
         return false;
       });
     </script>
@@ -115,6 +124,7 @@
       @endforeach
     </div>
     @if ($is_pending)
+      <div class="row">&nbsp;</div>
       <div class="alert alert-info" role="alert">您已經申請加入此組織！請靜待核准或是去信箱查看確認信件！</div>
     @endif
   </div>

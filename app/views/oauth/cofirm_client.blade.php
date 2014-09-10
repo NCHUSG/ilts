@@ -79,8 +79,10 @@
   </div>
 
   <div class="row need-list">
-    {{$require}}
-    <p class="text-muted">授權使用期限：yyyy/mm/dd</p>
+    @foreach ($require as $key => $value)
+      <p scope="{{$key}}"><span class="glyphicon glyphicon-check"></span>{{$value}}</p>
+    @endforeach
+    <p class="text-muted">授權使用期限：{{$expires}}</p>
   </div>
 
   <div class="row confirm">

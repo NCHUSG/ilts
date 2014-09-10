@@ -6,4 +6,9 @@ class OAuthAccessToken extends Eloquent {
     protected $guarded      = array('token_id');
     protected $softDelete   = true;
 
+    public static function get($token)
+    {
+        return OAuthAccessToken::where('access_token','=',$token)->first();
+    }
+
 }
