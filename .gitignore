@@ -3,7 +3,6 @@
 /app/config/app.php
 /app/config/database.php
 /app/config/hybridauth.php
-/app/config/sites.php
 /app/config/mail.php
 composer.phar
 composer.lock
