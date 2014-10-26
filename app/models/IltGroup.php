@@ -49,7 +49,7 @@ class IltGroup extends Eloquent {
         if ($opt->count())
             return filter_var($opt->first()->g_o_value, FILTER_VALIDATE_BOOLEAN);
         else
-            return Config::get('default.group_options.' . $key,$default);
+            return Config::get('default.group_bool_option.' . $key,$default);
     }
 
     public function options( $options = array() )

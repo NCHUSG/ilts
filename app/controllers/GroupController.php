@@ -22,6 +22,7 @@ class GroupController extends BaseController {
         $user = IltUser::get();
         $id = IltIdentity::get($user,$group);
         $options = $group->options();
+        $is_admin = false;
 
         $data = array();
 
@@ -32,7 +33,7 @@ class GroupController extends BaseController {
         
         foreach ($info as $key => $value) {
             if (isset($options[$key])) {
-                $info[$key] = isset($options[$key]);
+                $info[$key] = $options[$key];
             }
         }
 
@@ -54,7 +55,7 @@ class GroupController extends BaseController {
         if ($id) {
             $data['is_pending'] = $id->is_pending();
             $data['display_join'] = $data['is_pending'];
-            $data['is_admin'] = $id->is_admin();
+            $is_admin = $id->is_admin();
 
             if ($id->member_or_higher()) {
                 $data['display_subGroup'] = $this->toBool('allow_members_see_child_group') || $data['is_admin'];
@@ -70,23 +71,119 @@ class GroupController extends BaseController {
         else{
             $data['is_pending'] = false;
             $data['display_join'] = $join_option['joinByAllow'] || $join_option['directJoinable_by_StudentEmailValidation'] || $join_option['directJoinable_by_EmailValidation'] || $join_option['directJoinable'];
-            $data['is_admin'] = false;
 
             $data['display_subGroup'] = $this->toBool('allow_guest_see_child_group');
             $data['display_member'] = $this->toBool('allow_guest_see_members');
             $data['display_create'] = false;
         }
 
+        $data['is_admin'] = $is_admin;
+
+        if ($group->g_parent_id)
+            $data['parent_group'] = $group->getParent();
+
         if (Session::has('message')) {
             $data['message'] = Session::get('message');
             Session::forget('message');
         }
 
-        // var_dump($options);
-        // var_dump($data);
-        // die();
+        // =====================================
+        // Group Admin
+        // =====================================
+
+        if ($is_admin) {
+
+            $data['basic_info'] = array('name' => $group->g_name, 'code' => $group->g_code);
+
+            $defaultInfo = Config::get('default.group_options');
+            $option = array();
+            
+            foreach ($defaultInfo as $key => $value) {
+                if (isset($options[$key]))
+                    $option[$key] = $options[$key];
+                else
+                    $option[$key] = $value;
+            }
+
+            $defaultInfo = Config::get('default.group_bool_options');
+            
+            foreach ($defaultInfo as $key => $value) {
+                if (isset($options[$key]))
+                    $option[$key] = $options[$key];
+                else
+                    $option[$key] = $value;
+            }
+
+            $data['option'] = $option;
+            $data['fields'] = array_merge(Config::get('fields.group'),Config::get('fields.join_method'));
+        }
+
+        // =====================================
 
         return View::make('group/info', array('name' => 'group'))->with($data);
+    }
+
+    public function ctrl($code,$type)
+    {
+        $availible_type = array('basicCtrl','public','bool_option');
+        if(!in_array($type, $availible_type))
+            App::abort(405);
+
+        $user = IltUser::get();
+        $group = IltGroup::get($code);
+
+        $rules      = Config::get('validation.CTRL.group.'.$type.'.rules');
+        $messages   = Config::get('validation.CTRL.group.'.$type.'.messages');
+        $validator  = Validator::make(Input::all(), $rules, $messages);
+
+        if ($validator->fails()){
+            $result = array(
+                'success' => false,
+                'message' => '您填的選項有誤，請檢查',
+                'errors' => $validator->errors()->toArray()
+            );
+            return Response::json($result);
+        }
+
+        $default = array();
+
+        switch ($type) {
+            case 'basicCtrl':
+                $group->g_name = Input::get('name');
+
+                if(Input::get('code') != $group->g_code){
+                    if(IltGroup::get(Input::get('code') !== false)){
+                        $result = array(
+                            'success' => false,
+                            'message' => '您填的選項有誤，請檢查',
+                            'errors' => array("code" => "這個簡稱已經被使用過了...")
+                        );
+                        return Response::json($result);
+                    }
+                }
+                $group->g_code = Input::get('code');
+                $group->save();
+                break;
+            case 'public':
+                $default = Config::get('default.group_public_options');
+            case 'bool_option':
+                $default = array_merge($default,Config::get('default.group_bool_options'));
+                $option = array();
+                foreach ($default as $name => $def)
+                    $option[$name] = Input::get($name,$def);
+                $group->options($option);
+                break;
+            default:
+                App::abort(405);
+        }
+        
+        $result = array(
+            'success' => true,
+            'message' => '修改成功！',
+            'url' => route('group',$group->g_code) . '#ctrl',
+        );
+        
+        return Response::json($result);
     }
 
     public function subGroups($code)
@@ -107,12 +204,8 @@ class GroupController extends BaseController {
                 if ($memberOrHigher) {
                     $urlTmp['info'] = route('group',$group->g_code);
 
-                    if ($id){
-                        if ($id->is_admin())
-                            $urlTmp['ctrl'] = route('groupCtrl',$group->g_code);
-
+                    if ($id)
                         $status = Config::get('sites.i_authority_value_to_readable.'.$id->i_authority);
-                    }
                     else
                         $status = 'guest';
                 }
@@ -171,51 +264,59 @@ class GroupController extends BaseController {
     public function create_process($code = null)
     {
         $result     = array();
-        $rules      = Config::get('validation.CTRL.group.rules');
-        $messages   = Config::get('validation.CTRL.group.messages');
+        $rules      = array_merge(
+            Config::get('validation.CTRL.group.basic.rules'),
+            Config::get('validation.CTRL.group.public.rules'),
+            Config::get('validation.CTRL.group.bool_option.rules')
+        );
+        $messages   = array_merge(
+            Config::get('validation.CTRL.group.basic.messages'),
+            Config::get('validation.CTRL.group.public.messages'),
+            Config::get('validation.CTRL.group.bool_option.messages')
+        );
         $validator  = Validator::make(Input::all(), $rules, $messages);
 
         if ($validator->fails())
         {
-            $result["errors"] = $validator->errors()->toArray();
-            //return Redirect::to('portal/register')->withErrors($validator)->withInput();
-            return Response::json($result);
-            //return Redirect::route('user');
-        }
-        else {
-            if (isset($code))
-                $g = IltGroup::get($code)->createChild();
-            else
-                $g = new IltGroup;
-
-            $g->g_code = Input::get('code');
-            $g->g_name = Input::get('name');
-            $g->save();
-
-            $options = array();
-
-            $optionsConfig = Config::get('default.group_public_options');
-
-            foreach ($optionsConfig as $key => $value)
-                $options[$key] = Input::get($key,$value);
-
-            $optionsConfig = Config::get('default.group_options');
-
-            foreach ($optionsConfig as $key => $value)
-                $options[$key] = Input::get($key,$value);
-
-            $optionsConfig = Config::get('default.group_bool_options');
-
-            foreach ($optionsConfig as $key => $value)
-                $options[$key] = Input::get($key,$value);
-            
-            $g->options($options);
-
-            $g->recruit(IltUser::get(),true);
-
-            $result["url"] = route('group',$g->g_code);
+            $result = array(
+                'success' => false,
+                'errors' => $validator->errors()->toArray()
+            );
             return Response::json($result);
         }
+        
+        if (isset($code))
+            $g = IltGroup::get($code)->createChild();
+        else
+            $g = new IltGroup;
+
+        $g->g_code = Input::get('code');
+        $g->g_name = Input::get('name');
+        $g->save();
+
+        $options = array();
+
+        $optionsConfig = Config::get('default.group_public_options');
+
+        foreach ($optionsConfig as $key => $value)
+            $options[$key] = Input::get($key,$value);
+
+        $optionsConfig = Config::get('default.group_bool_options');
+
+        foreach ($optionsConfig as $key => $value)
+            $options[$key] = Input::get($key,$value);
+        
+        $g->options($options);
+
+        $g->recruit(IltUser::get(),true);
+
+        $result = array(
+            'success' => true,
+            'message' => '建立成功！',
+            'url' => route('group',$g->g_code) . '#ctrl',
+        );
+        
+        return Response::json($result);
     }
 
     public function join($code,$method){
@@ -330,10 +431,6 @@ class GroupController extends BaseController {
         }
 
         return $result;
-    }
-
-    public function update_info($type){
-        $user = $this->user;
     }
 
 }

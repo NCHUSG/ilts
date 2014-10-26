@@ -54,6 +54,9 @@
               <h3 class="text-center">...</h3>
               <div class="alert" role="alert"></div>
             </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
           </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->

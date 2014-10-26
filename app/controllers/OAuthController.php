@@ -50,7 +50,12 @@ class OAuthController extends BaseController {
         }
 
         // 把奇怪的 scope 濾掉
-        $scope_set = explode('+', Input::get('scope'));
+        $scope_set = explode(' ', Input::get('scope'));
+
+        var_dump(Input::get('scope'));
+        var_dump($scope_set);
+        // die();
+
         $available_scope = Config::get('sites.oauth_scope');
         $scope  = array();
 
@@ -330,6 +335,23 @@ class OAuthController extends BaseController {
                             break;
                         case 'user.isPendingOf.':
                             $data['isPendingOf'][$code] = $group ? IltIdentity::isPending($user,$group) : false;
+                            break;
+                        case 'user.inUnder.':
+                            if ($group) {
+                                $groups = $group->children()->get()->all();
+
+                                $result_groups = array();
+
+                                foreach ($groups as $key => $g) {
+                                    if (IltIdentity::memberOrHigher($user,$g)) {
+                                          $result_groups[] = $g->g_code;
+                                      }
+                                }
+                                $data['inUnder'][$code] = $result_groups;
+                            }
+                            else{
+                                $data['inUnder'][$code] = false;
+                            }
                             break;
                         default:
                             throw new Exception("Invalid Scope");

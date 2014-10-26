@@ -184,6 +184,7 @@ return array(
         'user.isMemberOf.'  => '可以取得使用者是否為 {group} 的一般成員',
         'user.isAdminOf.'  => '可以取得使用者是否為 {group} 的管理員',
         'user.isPendingOf.'  => '可以取得使用者是否為 {group} 的待核准成員',
+        'user.inUnder.'  => '可以取得使用者在 {group} 之下所有所屬子群組',
     ),
 
     'email_form_message' => array(

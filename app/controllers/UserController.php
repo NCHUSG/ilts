@@ -120,8 +120,8 @@ class UserController extends BaseController {
             $group = $id->group()->first();
             $urlTmp = array('info' => route('group',$group->g_code));
 
-            if ($authority == Config::get('sites.i_authority_admin_value'))
-                $urlTmp['ctrl'] = route('groupCtrl',$group->g_code);
+            // if ($authority == Config::get('sites.i_authority_admin_value'))
+            //     $urlTmp['ctrl'] = route('groupCtrl',$group->g_code);
 
             $status = Config::get('sites.i_authority_value_to_readable.'.$authority);
 
@@ -188,18 +188,23 @@ class UserController extends BaseController {
     }
 
     public function update_info($type){
-        $user = IltUser::get();
-
         $availible_type = array('basic','option');
         if(!in_array($type, $availible_type))
-            return "submit_type_not_availible!";
+            return Response::json(array('error' => 'Invalid type!'));
+
+        $user = IltUser::get();
 
         $rules      = Config::get('validation.CTRL.user.update_info.'.$type.'.rules');
         $messages   = Config::get('validation.CTRL.user.update_info.'.$type.'.messages');
         $validator  = Validator::make(Input::all(), $rules, $messages);
 
         if ($validator->fails()){
-            return $validator->errors();
+            $result = array(
+                'success' => false,
+                'message' => '修改成功！',
+                'errors' => $validator->errors()->toArray()
+            );
+            return Response::json($result);
         }
 
         if($type == "basic"){
@@ -221,8 +226,14 @@ class UserController extends BaseController {
             $user_opt->u_description    = Input::get('description');
             $user_opt->save();
         }
+
+        $result = array(
+            'success' => true,
+            'message' => '修改成功！',
+            'url' => route('user') . '#info',
+        );
         
-        return "OK!";
+        return Response::json($result);
     }
 
 }

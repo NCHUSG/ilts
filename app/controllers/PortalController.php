@@ -175,10 +175,11 @@ class PortalController extends BaseController {
 
         if ($validator->fails())
         {
+            $result["error"] = "您填寫的選項有誤，請檢查，謝謝";
             $result["errors"] = $validator->errors()->toArray();
-            //return Redirect::to('portal/register')->withErrors($validator)->withInput();
+            $result["success"] = false;
+
             return Response::json($result);
-            //return Redirect::route('user');
         }
         else {
             $register = (object) Session::get('register');
@@ -234,14 +235,21 @@ class PortalController extends BaseController {
                 Session::forget('portal.callback');
 
                 $result["url"] = $callback;
+                $result["message"] = "註冊成功，將轉回您之前要求的畫面...";
             }
-            else
+            else{
                 $result["url"] = route('user');
+                $result["message"] = "註冊成功!";
+            }
 
             if(!IltGroup::where("g_status","like","%admin%")->count()){
                 $this->init_ilt($user);
                 $result["url"] = route('admin');
+                $result["message"] = "您是第一個使用者，網站初始化完成！已預設您為管理員！";
             }
+
+            $result["success"] = true;
+
             return Response::json($result);
         }
     }

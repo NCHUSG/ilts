@@ -4,8 +4,8 @@ class TestController extends BaseController {
 
     public function main()
     {
-        var_dump("Session");
-        var_dump(Session::all());
+        var_dump("Input");
+        var_dump(Input::only(array('test1','test2','test3')));
         // var_dump("CurrUser");
         // var_dump(IltUser::get());
         // var_dump("opt");

@@ -78,7 +78,7 @@ Route::group(array('before' => 'auth_only'), function()
 
         Route::group(array('before' => 'groupAdmin'), function()
         {
-            Route::get('/group/ctrl/{code}', array( 'uses' => 'GroupController@ctrl', 'as' => 'groupCtrl'));
+            Route::post('/group/ctrl/{code}/{type}', array( 'uses' => 'GroupController@ctrl', 'as' => 'groupCtrl'));
         });
     });
 

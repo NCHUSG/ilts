@@ -191,31 +191,57 @@ return array(
             ),
         ),
         'group' => array(
-            'rules' => array(
-                'name' => 'required',
-                'code' => 'required|alpha|unique:ilt_groups,g_code',
-                'description' => '',
-                'email' => '',
-
-                'public' => 'required|in:true,false',
-                'joinByAllow' => 'required|in:true,false',
-                'directJoinable_by_StudentEmailValidation' => 'required|in:true,false',
-                'directJoinable_by_EmailValidation' => 'required|in:true,false',
-                'directJoinable' => 'required|in:true,false',
-
-                'allow_member_create_child_group' => 'required|in:true,false',
-
-                'allow_guest_see_child_group' => 'required|in:true,false',
-                'allow_guest_see_members' => 'required|in:true,false',
-                'allow_members_see_child_group' => 'required|in:true,false',
-                'allow_members_see_members' => 'required|in:true,false',
-
+            'basic' => array(
+                'rules' => array(
+                    'name' => 'required',
+                    'code' => 'required|alpha|unique:ilt_groups,g_code',
+                ),
+                'messages' => array(
+                    'alpha'    => '必須完全為英文字母!',
+                    'unique'   => '這個簡稱已經被使用過了...',
+                    'required' => '本欄位選項是必填的!',
+                ),
             ),
-            'messages' => array(
-                'alpha'    => '必須完全為英文字母!',
-                'unique'   => '這個簡稱已經被使用過了...',
-                'required' => '本欄位選項是必填的!',
-                'in'       => '本欄位選項必需為 true 或 false!',
+            'basicCtrl' => array(
+                'rules' => array(
+                    'name' => 'required',
+                    'code' => 'required|alpha',
+                ),
+                'messages' => array(
+                    'alpha'    => '必須完全為英文字母!',
+                    'required' => '本欄位選項是必填的!',
+                ),
+            ),
+            'public' => array(
+                'rules' => array(
+                    'description' => '',
+                    'email' => 'email',
+                ),
+                'messages' => array(
+                    'email' => '本欄位選項請符合email格式（Ex. foo@bar.com）。',
+                ),
+            ),
+            'bool_option' => array(
+                'rules' => array(
+                    'public' => 'required|in:true,false',
+                    'joinByAllow' => 'required|in:true,false',
+                    'directJoinable_by_StudentEmailValidation' => 'required|in:true,false',
+                    'directJoinable_by_EmailValidation' => 'required|in:true,false',
+                    'directJoinable' => 'required|in:true,false',
+
+                    'allow_member_create_child_group' => 'required|in:true,false',
+
+                    'allow_guest_see_child_group' => 'required|in:true,false',
+                    'allow_guest_see_members' => 'required|in:true,false',
+                    'allow_members_see_child_group' => 'required|in:true,false',
+                    'allow_members_see_members' => 'required|in:true,false',
+
+                ),
+                'messages' => array(
+                    'alpha'    => '必須完全為英文字母!',
+                    'required' => '本欄位選項是必填的!',
+                    'in'       => '本欄位選項必需為 true 或 false!',
+                ),
             ),
         ),
         'process_join_by_email' => array(

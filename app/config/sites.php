@@ -36,14 +36,26 @@ return array(
     ),
 
     'oauth_scope' => array(
-        'user.login.basic'     => '可以得知是否擁有本系統使用者權限',
-        'user.login.student'   => '可以得知是否擁有本系統學生權限',
-        'user.login.developer' => '可以得知是否擁有本系統開發者權限',
-        'user.info.basic'    => '可以取得使用者基本資料（使用者名稱、信箱）',
-        'user.info.internet' => '可以取得使用者網路資料（網站網址、Gravatar頭像位址、自我敘述）',
-        'user.info.personal' => '可以取得使用者個人資料（姓名、性別、生日、電話、地址）',
-        'user.info.student'  => '可以取得使用者學生資料（學校信箱、學號、科系、年級）'
+        'user.login.basic',
+        'user.login.student',
+        'user.login.developer',
+        'user.info.basic',
+        'user.info.internet',
+        'user.info.personal',
+        'user.info.student',
     ),
+
+    'oauth_scope_id_prefix' => array(
+        'user.isIn.',
+        'user.isMemberOf.',
+        'user.isAdminOf.',
+        'user.isPendingOf.',
+        'user.inUnder.',
+    ),
+
+    'email_StudentEmailValidation_type_value' => 'directJoinable_by_StudentEmailValidation',
+    'email_directJoinable_by_EmailValidation_type_value' => 'directJoinable_by_EmailValidation',
+    'email_invitaion_type_prefix' => 'invitation:',
 
     'g_status_admin_value' => 'admin',
     'g_status_dev_value' => 'dev',

@@ -51,24 +51,7 @@
         <li><a href="#about" data-toggle="tab">關於</a></li>
         <li class="active"><a href="#developer_info" data-toggle="tab">開發者</a></li>
         <li><a href="#projects" data-toggle="tab">專案</a></li>
-        <li class="dropdown">
-          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-            登出、切換 <span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu">
-            <li><a href="{{action('PortalController@logout')}}">登出</a></li>
-
-            <li>
-              <a href="{{action('UserController@index')}}">
-                使用者介面
-              </a>
-            </li>
-            <li><a href="#">管理者介面</a></li>
-            <li><a href="#">群組介面</a></li>
-          </ul>
-        </li>
-        <!-- <li><a href="#">系統管理</a></li> -->
-
+        <li><a href="{{route('user')}}">使用者介面</a></li>
       </ul>
     </div>
   </div>

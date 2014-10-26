@@ -34,7 +34,10 @@
           <li><a href="#members" data-toggle="tab">成員</a></li>
         @endif
         @if($is_admin)
-          <li><a href="{{route('user')}}">管理</a></li>
+          <li><a href="#ctrl" data-toggle="tab">編輯選項</a></li>
+        @endif
+        @if(isset($parent_group))
+          <li><a href="{{route('group',$parent_group->g_code)}}">返回 {{$parent_group->g_name}}</a></li>
         @endif
         <li><a href="{{route('user')}}">使用者介面</a></li>
       </ul>
@@ -50,6 +53,9 @@
     @endif
     @if($display_member)
       @include('group.pane_members')
+    @endif
+    @if($is_admin)
+      @include('group.pane_ctrl')
     @endif
   </div>
 </div>

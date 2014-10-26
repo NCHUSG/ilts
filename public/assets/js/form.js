@@ -1,4 +1,4 @@
-var submit_loading_inteval,submiting,submit_registration,submit_action,redirectUrl;
+var submit_loading_inteval,submiting,submit_registration,submit_action,redirectUrl,resultMessage;
 
 function submit_action(){
   if(!submit_loading_inteval){
@@ -29,16 +29,18 @@ function submit_action(){
 
 function submit_registration(){
   var form_data = $( "form#ilt_form" ).serializeArray();
+
+  redirectUrl = null;
+  resultMessage = null;
   
   $.ajax({
     type: "POST",
     data: form_data,
     url: $( "form#ilt_form" ).attr('action'),
     success: function(r){
-      var isSuccess = true;
+      var isSuccess = !!r.success;
       console.log(r);
       if(r.errors){
-        isSuccess = false;
         $('p.form-control-static').each(function(){
           $(this).text('');
         });
@@ -46,15 +48,19 @@ function submit_registration(){
           $('input[name='+k+']').next().text(r.errors[k]);
       }
 
+      if(r.error)
+        alert(r.error);
+
       if(r.url)
         redirectUrl = r.url;
-      
+
+      if(r.message)
+        resultMessage = r.message;
+
       submiting.data('isSuccess',isSuccess);
-      if(!isSuccess)
-        alert("您填寫的選項有誤，請檢查，謝謝");
     },
-    error: function(xhr,status_text){
-      alert("連線錯誤："+status_text);
+    error: function(xhr,status_text,errorThrown){
+      alert("連線錯誤：\nstatus_text:"+status_text+",\nerrorThrown:"+errorThrown);
       console.log(xhr);
       submiting.data('isSuccess',false);
     },
@@ -66,7 +72,9 @@ function submit_registration(){
         submiting.removeClass('state-loading');
         if(submiting.data('isSuccess')){
           submiting.css('background-color','#0E7138');
-          submiting.text("註冊成功！");
+          if(resultMessage){
+            submiting.text(resultMessage);
+          }
           submiting.addClass('state-success');
         }
         var complete_interval_2 = setInterval(function(){
@@ -74,7 +82,7 @@ function submit_registration(){
           submiting.find('span.progress-inner').css('width','0%');
           clearInterval(complete_interval_2);
           submit_loading_inteval=false;
-          if(submiting.data('isSuccess'))
+          if(redirectUrl)
             window.location = redirectUrl;
           else{
             var optional_field = $('div#optional_field');
@@ -82,7 +90,6 @@ function submit_registration(){
             optional_field.find('button[type=submit]').click(submit_action);
             optional_field.slideDown();
           }
-            
         },1000);
         clearInterval(complete_interval_1);
       },500);

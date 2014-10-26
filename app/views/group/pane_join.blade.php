@@ -70,6 +70,7 @@
         $('div#infobox h4.modal-title').text("發出加入請求...");
         $('div#infobox h3.text-center').show().text("請稍等...");
         $('div#infobox div.alert').hide();
+        $('div#infobox div.modal-footer').hide();
         $('div#infobox #noTrespassingOuterBarG').show();
         $('div#infobox').modal({
           keyboard: false
