@@ -9,22 +9,29 @@ function more(wrapperSelector){
       return;
     trigger_get_being = true;
     var noMore = false;
+    var nothing = true;
 
     $.ajax({
       url: root.attr('href'),
       success: function(r){
-        var panel,button;
-        var g = r.groups;
+        var panel,attr;
+        var g = r.data;
 
         for(k in g){
+          nothing = false;
           panel = sample.find('div.panel').clone();
           panel.addClass(g[k].status);
           panel.find('h3.panel-title span.group_name').text(g[k].name)
           panel.find('h3.panel-title span.statusText').text(g[k].statusText)
           for(j in g[k].url){
-            button = sample.find('a.btn.'+j).clone();
-            button.attr('href',g[k].url[j]);
-            panel.find('div.panel-body').append(button);
+            attr = sample.find('a.btn.'+j).clone();
+            attr.attr('href',g[k].url[j]);
+            panel.find('div.panel-body').append(attr);
+          }
+          for(j in g[k].info){
+            attr = sample.find('div.info.'+j).clone();
+            attr.find('.info-content').append(g[k].info[j]);
+            panel.find('div.panel-body').append(attr);
           }
           root.find('div.more-container').prepend(panel);
         }
@@ -42,8 +49,10 @@ function more(wrapperSelector){
         if (noMore){
           $('div.more-loadingBar').slideUp(function(){
             $('div.more-loadingBar').empty();
-            $('div.more-loadingBar').append("<h4 class='text-center'>沒有更多了...</h4>");
-            $('div.more-loadingBar').slideDown();
+            if(nothing){
+              $('div.more-loadingBar').append("<h4 class='text-center'>沒東西。</h4>");
+              $('div.more-loadingBar').slideDown();
+            }
           });
           trigger_get_being = true;
         }

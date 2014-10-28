@@ -70,4 +70,20 @@ class IltUser extends Eloquent {
             return IltIdentity::member($this,$group);
     }
 
+    public function getByPage($page = 1, $limit = 10)
+    {
+      $results = StdClass;
+      $results->page = $page;
+      $results->limit = $limit;
+      $results->totalItems = 0;
+      $results->items = array();
+     
+      $users = $this->model->skip($limit * ($page - 1))->take($limit)->get();
+     
+      $results->totalItems = $this->model->count();
+      $results->items = $users->all();
+     
+      return $results;
+    }
+
 }

@@ -10,8 +10,6 @@
 
     @section('footer_scripts')
       @parent
-      <script src="{{ asset('assets/js/jquery.appear.js'); }}"></script>
-      <script src="{{ asset('assets/js/more.js'); }}"></script>
       <script>
         $(document).ready(function(){
           var trigger_more = more('div#subGroups-wrapper');

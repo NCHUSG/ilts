@@ -223,12 +223,86 @@ class GroupController extends BaseController {
         }
 
         $result = array(
-            'groups' => $result,
+            'data' => $result,
             'more' => false,
             'nextUrl' => route('subGroup',$code),
         );
 
         return Response::json($result);
+    }
+
+    public function member($code,$page = null)
+    {
+        try {
+            $user = IltUser::get();
+            $group = IltGroup::get($code);
+            $id = IltIdentity::get($user,$group);
+
+            $result = array();
+
+            if (!$group->getBoolOption("allow_guest_see_members")) {
+                if (!$group->getBoolOption("allow_members_see_members") && !$id->admin_or_higher()) {
+                    throw new Exception("You are not allowed to view members in this group!");
+                }
+            }
+
+            $page = $page ? $page : 0;
+
+            $limit = Config::get('sites.number_of_user_per_page');
+            $user_shown_column = Config::get('sites.user_shown_column');
+            $i_authority_value_to_readable = Config::get('sites.i_authority_value_to_readable');
+            $identity_status = Config::get('fields.identity_status');
+
+            $members_db = $group->users()->skip($limit * ($page))->take($limit)->get($user_shown_column)->all();
+
+            $members = array();
+
+            foreach ($members_db as $key => $m) {
+                $member['name'] = $m->u_nick;
+                $info = array(
+                    'username' => $m->u_username,
+                    'email' => $m->u_email,
+                );
+                $member['info'] = $info;
+                $status = $i_authority_value_to_readable[$m->i_authority];
+                $member['status'] = $status;
+                $member['statusText'] = $identity_status[$status];
+
+                $members[] = $member;
+            }
+
+            if(count($members_db) == $limit){
+                $more = true;
+                $page++;
+            }
+            else{
+                $more = false;
+                $page = 0;
+            }
+
+            // var_dump($members);
+            // //var_dump($queries = DB::getQueryLog());
+            // die();
+
+            $result = array(
+                'data' => $members,
+                'more' => $more,
+                'nextUrl' => route('member',array($code,$page)),
+            );
+
+        } catch (Exception $e) {
+            $result['error'] = $e->getMessage();
+        }
+
+        return Response::json($result);
+    }
+
+    public function invite($code){
+
+    }
+
+    public function allow($code,$username){
+        
     }
 
     public function create($code = null)

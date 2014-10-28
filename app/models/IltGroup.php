@@ -13,7 +13,7 @@ class IltGroup extends Eloquent {
 
     public function users()
     {
-        return $this->belongsToMany('IltUser', 'IltIdentity');
+        return $this->belongsToMany('IltUser', 'ilt_identity_tags','g_id','u_id');
     }
 
     public static function get($code,$throwNotFoundException = false)

@@ -5,12 +5,15 @@
   @parent
 
   <link href="{{ asset('assets/css/info.css'); }}" rel="stylesheet"/>
+  <link href="{{ asset('assets/css/more.css'); }}" rel="stylesheet"/>
 @stop
 
 @section('footer_scripts')
   @parent
 
   <script src="{{ asset('assets/js/info.js'); }}"></script>
+  <script src="{{ asset('assets/js/jquery.appear.js'); }}"></script>
+  <script src="{{ asset('assets/js/more.js'); }}"></script>
 @stop
 
 @section('content')

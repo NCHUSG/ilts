@@ -63,7 +63,7 @@ Route::group(array('before' => 'auth_only'), function()
 
         Route::get('/group/under/{code}', array( 'uses' => 'GroupController@subGroups', 'as' => 'subGroup', 'before' => 'groupUnder'));
 
-        Route::get('/group/member/{code}', array( 'uses' => 'GroupController@member', 'as' => 'member', 'before' => 'groupMember'));
+        Route::get('/group/member/{code}/{page?}', array( 'uses' => 'GroupController@member', 'as' => 'member', 'before' => 'groupUnder'));
 
         Route::get('/group/join/{code}/{method}', array( 'uses' => 'GroupController@join', 'as' => 'join'));
 
@@ -79,6 +79,10 @@ Route::group(array('before' => 'auth_only'), function()
         Route::group(array('before' => 'groupAdmin'), function()
         {
             Route::post('/group/ctrl/{code}/{type}', array( 'uses' => 'GroupController@ctrl', 'as' => 'groupCtrl'));
+
+            Route::post('/group/invite/{code}', array( 'uses' => 'GroupController@invite', 'as' => 'invite'));
+
+            Route::post('/group/allow/{code}/{username}', array( 'uses' => 'GroupController@allow', 'as' => 'allow'));
         });
     });
 

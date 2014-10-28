@@ -136,7 +136,7 @@ class UserController extends BaseController {
         }
 
         $result = array(
-            'groups' => $result,
+            'data' => $result,
             'more' => false,
             'nextUrl' => route('identities'),
         );

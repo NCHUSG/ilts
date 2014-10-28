@@ -71,4 +71,8 @@ return array(
         '11' => 'admin',
     ),
 
+    'number_of_user_per_page' => 20,
+
+    'user_shown_column' => array("u_username","u_nick","u_email","i_authority"),
+
 );
