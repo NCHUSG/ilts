@@ -176,7 +176,7 @@ class UserController extends BaseController {
             else if (strpos($email_orm->type, Config::get('sites.email_invitaion_type_prefix')) === 0){
                 // 由群組發出加入邀請， i_id 值為 0 ，理論上找不到 identity
                 $group = IltGroup::get(str_replace(Config::get('sites.email_invitaion_type_prefix'), '', $email_orm->type));
-                IltIdentity::member($user,$group);
+                $id = IltIdentity::member($user,$group);
                 Session::put('message',array('status' => 'success', 'content' => Config::get('fields.email_invitaion_ok_msg')));
                 return Redirect::route('group',$id->group()->first()->g_code);
             }

@@ -4,8 +4,6 @@
 
     @section('head_css')
       @parent
-
-      <link href="{{ asset('assets/css/more.css'); }}" rel="stylesheet"/>
     @stop
 
     @section('footer_scripts')

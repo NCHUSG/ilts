@@ -71,6 +71,12 @@ return array(
         '11' => 'admin',
     ),
 
+    'i_authority_readable_to_value' => array(
+        'pending' => '3',
+        'member' => '5',
+        'admin' => '11',
+    ),
+
     'number_of_user_per_page' => 20,
 
     'user_shown_column' => array("u_username","u_nick","u_email","i_authority"),

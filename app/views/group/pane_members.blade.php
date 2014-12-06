@@ -4,8 +4,6 @@
 
     @section('head_css')
       @parent
-
-      <link href="{{ asset('assets/css/more.css'); }}" rel="stylesheet"/>
     @stop
 
     @section('footer_scripts')
@@ -17,6 +15,11 @@
             trigger_more();
           $('ul.nav li a[href="#members"]').click(trigger_more);
         });
+
+        function perm_action(button){
+          interactive($(button).attr('href'));
+          return false;
+        }
       </script>
     @stop
 
@@ -32,6 +35,10 @@
         </div>
         <div class="info username col-xs-12 col-md-6"><div class="info-content alert alert-success">使用者名稱：</div></div>
         <div class="info email col-xs-12 col-md-6"><div class="info-content alert alert-info">電子信箱：</div></div>
+        <button href="#" class="btn btn-success allow" onclick="return perm_action(this)" role="button">准許加入</button>
+        <button href="#" class="btn btn-info admin" onclick="return perm_action(this)" role="button">提升為管理員</button>
+        <button href="#" class="btn btn-warning lower" onclick="return perm_action(this)" role="button">取消管理員權限</button>
+        <button href="#" class="btn btn-danger kick" onclick="return perm_action(this)" role="button">踢出</button>
       </div>
       <div class="more-container">
         <div class="more-loadingBar" class="row">
@@ -55,8 +62,8 @@
       </div>
     </div>
     <div class="row">&nbsp;</div>
-    @if($display_create)
-      <a href="{{ route('invite',$group->g_code) }}" class="btn btn-primary btn-lg btn-block" role="button">邀請</a>
+    @if($is_admin)
+      <a href="{{ route('invite',$group->g_code) }}" class="btn btn-primary btn-lg btn-block" onclick="return perm_action(this)" role="button">邀請</a>
     @endif
   </div>
 </div>

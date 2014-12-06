@@ -265,6 +265,15 @@ return array(
                     'email.email'           => '信箱欄位必須是正常的email格式',
                 ),
             ),
+            'invitaion' => array(
+                'rules' => array(
+                    'email' => array('required', 'email'),
+                ),
+                'messages' => array(
+                    'email.required'        => '信箱欄位必須填寫！',
+                    'email.email'           => '信箱欄位必須是正常的email格式',
+                ),
+            ),
         ),
         'student' => array(
             'apply_email_process' => array(

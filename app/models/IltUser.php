@@ -22,6 +22,16 @@ class IltUser extends Eloquent {
             return false;
     }
 
+    public static function fromUsername($username)
+    {
+        $query = IltUser::where("u_username",'=',$username);
+
+        if ($query->count() == 0)
+            throw new Exception("User not found!");
+        else
+            return $query->first();
+    }
+
     public static function logout()
     {
         return Session::forget('user_being');

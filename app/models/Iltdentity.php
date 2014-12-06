@@ -142,6 +142,10 @@ class IltIdentity extends Eloquent {
 
     public static function establish($user,$group,$authority = false)
     {
+        if($group->g_level_sort != 0)
+            if(IltIdentity::get($user,$group->getParent(),true)->i_authority < Config::get('sites.i_authority_member_value'))
+                throw new Exception("您尚未加入上層組織！");
+            
         $id = IltIdentity::firstOrCreate(array('g_id' => $group->getKey(), 'u_id' => $user->getKey()));
 
         if ($authority)

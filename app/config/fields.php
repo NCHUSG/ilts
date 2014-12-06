@@ -190,5 +190,6 @@ return array(
     'email_form_message' => array(
         'directJoinable_by_StudentEmailValidation' => '請輸入學生信箱',
         'directJoinable_by_EmailValidation' => '請輸入電子信箱',
-    )
+        'invitaion' => '請輸入電子信箱',
+    ),
 );

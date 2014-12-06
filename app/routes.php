@@ -69,6 +69,9 @@ Route::group(array('before' => 'auth_only'), function()
 
         Route::post('/group/join/{code}/{method}', array( 'uses' => 'GroupController@join', 'as' => 'join', 'before' => 'csrf'));
 
+        Route::get('/group/leave/{code}', array( 'uses' => 'GroupController@perm', 'as' => 'leave'));
+        Route::post('/group/leave/{code}', array( 'uses' => 'GroupController@perm', 'as' => 'leave'));
+
         Route::group(array('before' => 'groupCreate'), function()
         {
             Route::get('/group/create/{code}' , array( 'uses' => 'GroupController@create', 'as' => 'createGroup'));
@@ -80,9 +83,14 @@ Route::group(array('before' => 'auth_only'), function()
         {
             Route::post('/group/ctrl/{code}/{type}', array( 'uses' => 'GroupController@ctrl', 'as' => 'groupCtrl'));
 
+            Route::get('/group/invite/{code}', array( 'uses' => 'GroupController@invite', 'as' => 'invite'));
             Route::post('/group/invite/{code}', array( 'uses' => 'GroupController@invite', 'as' => 'invite'));
 
-            Route::post('/group/allow/{code}/{username}', array( 'uses' => 'GroupController@allow', 'as' => 'allow'));
+            Route::get('/group/perm/{code}/{username}/{level}', array( 'uses' => 'GroupController@perm', 'as' => 'perm'));
+            Route::post('/group/perm/{code}/{username}/{level}', array( 'uses' => 'GroupController@perm', 'as' => 'perm'));
+
+            Route::get('/group/delete/{code}', array( 'uses' => 'GroupController@delete', 'as' => 'deleteGroup'));
+            Route::post('/group/delete/{code}', array( 'uses' => 'GroupController@delete', 'as' => 'deleteGroup'));
         });
     });
 

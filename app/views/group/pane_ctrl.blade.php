@@ -1,3 +1,13 @@
+@section('footer_scripts')
+  @parent
+  <script>
+    function del_action(button){
+      interactive($(button).attr('href'));
+      return false;
+    }
+  </script>
+@stop
+
 <div id="ctrl" class="row content tab-pane">
   <div class="col-md-12 col-sm-12 editable_range">
     <h4>
@@ -55,5 +65,8 @@
         </div>
       @endforeach
     {{ Form::close() }}
+  </div>
+  <div class="col-md-12 col-sm-12">
+    <a href="{{ route('deleteGroup',$code) }}" class="btn btn-danger btn-block" onclick="return del_action(this);">刪除此群組</a>
   </div>
 </div>

@@ -16,6 +16,11 @@ class IltGroup extends Eloquent {
         return $this->belongsToMany('IltUser', 'ilt_identity_tags','g_id','u_id');
     }
 
+    public function ids()
+    {
+        return $this->hasMany('IltIdentity', 'i_id','g_id');
+    }
+
     public static function get($code,$throwNotFoundException = false)
     {
         $g_key = 'group.' . $code;

@@ -14,13 +14,14 @@
   <script src="{{ asset('assets/js/info.js'); }}"></script>
   <script src="{{ asset('assets/js/jquery.appear.js'); }}"></script>
   <script src="{{ asset('assets/js/more.js'); }}"></script>
+  <script src="{{ asset('assets/js/interactive.js'); }}"></script>
 @stop
 
 @section('content')
 <div class="container block">
   <div class="row">
     <div class="col-md-12 col-sm-12">
-      <h1 class="text-center">群組：{{ $group->g_name }}</h1>
+      <h1 class="text-center">群組：{{ $group->g_name }} <span class="badge">{{ $group->g_code }}</span></h1>
     </div>
   </div>
   <div class="row">

@@ -1,8 +1,10 @@
 
-function more(wrapperSelector){
+function more(wrapperSelector,callback){
   var root = $(wrapperSelector);
   var sample = root.find('div.more-sample');
   var trigger_get_being = false;
+
+  callback = typeof callback === "undefined" ? function(){} : callback;
 
   trigger_more = function(){
     if(trigger_get_being)
@@ -14,27 +16,38 @@ function more(wrapperSelector){
     $.ajax({
       url: root.attr('href'),
       success: function(r){
-        var panel,attr;
+        var panel,attr,section,panel_body;
         var g = r.data;
 
-        for(k in g){
+        for(var k in g){
           nothing = false;
           panel = sample.find('div.panel').clone();
           panel.addClass(g[k].status);
-          panel.find('h3.panel-title span.group_name').text(g[k].name)
-          panel.find('h3.panel-title span.statusText').text(g[k].statusText)
-          for(j in g[k].url){
-            attr = sample.find('a.btn.'+j).clone();
+          panel.find('h3.panel-title span.group_name').text(g[k].name);
+          panel.find('h3.panel-title span.statusText').text(g[k].statusText);
+          panel_body = panel.find('div.panel-body');
+
+          section = $("<div class='row'><div class='col-xs-12 panel-content'></div></div>");
+          for(var j in g[k].url){
+            attr = sample.find('.btn.'+j).clone();
             attr.attr('href',g[k].url[j]);
-            panel.find('div.panel-body').append(attr);
+            section.find(".panel-content").append(attr);
           }
-          for(j in g[k].info){
-            attr = sample.find('div.info.'+j).clone();
-            attr.find('.info-content').append(g[k].info[j]);
-            panel.find('div.panel-body').append(attr);
+          panel_body.append(section);
+          if(g[k].info){
+            panel_body.append("<div class='row'>&nbsp;</div>");
+            section = $("<div class='row'><div class='col-xs-12 panel-content'></div></div>");
+            for(var j in g[k].info){
+              attr = sample.find('div.info.'+j).clone();
+              attr.find('.info-content').append(g[k].info[j]);
+              section.find(".panel-content").append(attr);
+            }
+            panel_body.append(section);
           }
           root.find('div.more-container').prepend(panel);
         }
+
+        callback();
 
         if(!r.more)
           noMore = true;
@@ -62,7 +75,7 @@ function more(wrapperSelector){
 
       }
     });
-  }
+  };
 
   root.find('div.more-loadingBar').appear();
   $(document.body).on('appear', wrapperSelector + ' div.more-loadingBar', trigger_more);

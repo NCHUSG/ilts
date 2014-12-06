@@ -36,11 +36,11 @@ div.editable_range.editing .editable{
   display: none;
 }
 
-span.to_edit:hover{
+.to_edit:hover{
   background-color:rgba(24, 77, 129, 1);
 }
 
-span.save:hover{
+.save:hover{
   background-color:rgba(189, 138, 50, 1);
 }
 

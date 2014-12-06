@@ -28,6 +28,7 @@ class GroupController extends BaseController {
 
         $data['group'] = $group;
         $data['code'] = $group->g_code;
+        $data['username'] = $user->u_username;
 
         $info = Config::get('default.group_public_options');
         
@@ -237,13 +238,19 @@ class GroupController extends BaseController {
             $user = IltUser::get();
             $group = IltGroup::get($code);
             $id = IltIdentity::get($user,$group);
+            $admin = $id->admin_or_higher();
 
             $result = array();
 
             if (!$group->getBoolOption("allow_guest_see_members")) {
-                if (!$group->getBoolOption("allow_members_see_members") && !$id->admin_or_higher()) {
+                if (!$group->getBoolOption("allow_members_see_members") && !$admin) {
                     throw new Exception("You are not allowed to view members in this group!");
                 }
+            }
+
+            if($admin){
+                $i_authority_pending_value = Config::get('sites.i_authority_pending_value');
+                $i_authority_admin_value = Config::get('sites.i_authority_admin_value');
             }
 
             $page = $page ? $page : 0;
@@ -258,15 +265,34 @@ class GroupController extends BaseController {
             $members = array();
 
             foreach ($members_db as $key => $m) {
+                $member = array();
+
                 $member['name'] = $m->u_nick;
                 $info = array(
                     'username' => $m->u_username,
                     'email' => $m->u_email,
                 );
+                
                 $member['info'] = $info;
                 $status = $i_authority_value_to_readable[$m->i_authority];
                 $member['status'] = $status;
                 $member['statusText'] = $identity_status[$status];
+
+                if($admin){
+                    if($m->i_authority == $i_authority_pending_value)
+                        $member['url'] = array(
+                            "kick" => route('perm',array($code,$m->u_username,"kick")),
+                            "allow" => route('perm',array($code,$m->u_username,"member")),
+                            "admin" => route('perm',array($code,$m->u_username,"admin")),
+                        );
+                    else if($m->i_authority == $i_authority_admin_value)
+                        $member['url'] = array("lower" => route('perm',array($code,$m->u_username,"member")));
+                    else
+                        $member['url'] = array(
+                            "kick" => route('perm',array($code,$m->u_username,"kick")),
+                            "admin" => route('perm',array($code,$m->u_username,"admin")),
+                        );
+                }
 
                 $members[] = $member;
             }
@@ -298,11 +324,75 @@ class GroupController extends BaseController {
     }
 
     public function invite($code){
-
+        try {
+            $group = IltGroup::get($code);
+            $result = 
+                $this->process_join_by_email($group,"");
+        } catch (Exception $e) {
+            $result['error'] = $e->getMessage();
+        }
+        return Response::json($result);
     }
 
-    public function allow($code,$username){
-        
+    public function perm($code,$username = null,$level = "kick"){
+        try {
+            if(!in_array($level, array("member","admin","kick")))
+                App::abort(405);
+            $auth = Config::get('sites.i_authority_readable_to_value.' . $level);
+
+            if(is_null($username)){
+                $username = IltUser::get()->u_username;
+                $leaving = true;
+            }
+            else
+                $leaving = false;
+            $user = IltUser::fromUsername($username);
+            $group = IltGroup::get($code);
+
+            if($level == "kick"){
+                if(Input::get("code") != $code)
+                    throw new Exception("請再輸入一次這個組織的簡稱",-1);
+            
+                IltIdentity::get($user,$group,true)->delete();
+            }
+            else
+                IltIdentity::establish($user,$group,$auth);
+            $result = array(
+                'success' => true,
+                'message' => '修改完成！',
+                'status' => 'success',
+                'refresh' => 2000,
+            );
+        } catch (Exception $e) {
+            $result = array(
+                'success' => false,
+                'message' => $e->getMessage(),
+                'status' => 'danger',
+                'refresh' => 2000,
+            );
+            if($e->getCode() == -1){
+                $result['form'] = array(
+                    array(
+                        "type" => "hidden",
+                        "name" => "_token",
+                        "placeholder" => "",
+                        "value" => csrf_token(),
+                    ),
+                    array(
+                        "type" => "text",
+                        "name" => "code",
+                        "placeholder" => "簡稱",
+                        "value" => "",
+                    ),
+                );
+                unset($result['refresh']);
+                if($leaving)
+                    $result['postURL'] = route("leave",array($code));
+                else
+                    $result['postURL'] = route("perm",array($code,$username));
+            }
+        }
+        return Response::json($result);
     }
 
     public function create($code = null)
@@ -413,13 +503,13 @@ class GroupController extends BaseController {
                 case 'directJoinable_by_StudentEmailValidation':
 
                     $result = 
-                        $this->process_join_by_email($user,$group,'directJoinable_by_StudentEmailValidation');
+                        $this->process_join_by_email($group,$user,'directJoinable_by_StudentEmailValidation');
 
                     break;
                 case 'directJoinable_by_EmailValidation':
 
                     $result = 
-                        $this->process_join_by_email($user,$group,'directJoinable_by_EmailValidation');
+                        $this->process_join_by_email($group,$user,'directJoinable_by_EmailValidation');
 
                     break;
                 case 'directJoinable':
@@ -442,23 +532,52 @@ class GroupController extends BaseController {
         return Response::json($result);
     }
 
-    private function process_join_by_email($user,$group,$method)
+    private function process_join_by_email($group,$user,$method = "invitaion")
     {
-        if (!$group->getBoolOption($method))
+        if (!$group->getBoolOption($method) && ($method != "invitaion"))
             throw new Exception("method not allowed!");
         $rules      = Config::get('validation.CTRL.process_join_by_email.'.$method.'.rules');
         $messages   = Config::get('validation.CTRL.process_join_by_email.'.$method.'.messages');
         $validator  = Validator::make(Input::all(), $rules, $messages);
         if($validator->fails()){
-            $result['form'] = array(
-                'hidden' => array(
-                    '_token' => csrf_token(),
+            $result['form'] = $method == "invitaion" ?  array(
+                array(
+                    "type" => "hidden",
+                    "name" => "_token",
+                    "placeholder" => "",
+                    "value" => csrf_token(),
                 ),
-                'text' => array(
-                    'email' => '',
+                array(
+                    "type" => "text",
+                    "name" => "email",
+                    "placeholder" => "Email",
+                    "value" => "",
                 ),
+                array(
+                    "type" => "text",
+                    "name" => "Name",
+                    "placeholder" => "名字",
+                    "value" => "",
+                ),
+            ) : array(
+                array(
+                    "type" => "hidden",
+                    "name" => "_token",
+                    "placeholder" => "",
+                    "value" => csrf_token(),
+                ),
+                array(
+                    "type" => "text",
+                    "name" => "email",
+                    "placeholder" => "Email",
+                    "value" => "",
+                )
             );
-            $result['postURL'] = route('join',array($group->g_code,$method));
+            if($method == "invitaion")
+                $route_method = "invite";
+            else
+                $route_method = "join";
+            $result['postURL'] = route($route_method,array($group->g_code,$method));
             if(Request::isMethod('get')){
                 $result['message'] = Config::get('fields.email_form_message.' . $method);
                 $result['status'] = 'info';
@@ -469,23 +588,32 @@ class GroupController extends BaseController {
             }
         }
         else{
-            $id = IltIdentity::pending($user,$group);
-
-            $code = md5( time() + $user->u_username );
+            if($method == "invitaion"){
+                $id_key = 0;
+                $code_factor = $group->g_code;
+                $method = Config::get('sites.email_invitaion_type_prefix') . $group->g_code;
+            }
+            else{
+                $id_key = IltIdentity::pending($user,$group)->getKey();
+                $code_factor = $user->u_username;
+            }
+            
+            $code = md5( time() + $code_factor );
             while(IltEmailVallisations::where('code','=',$code)->count()){
-                $code = md5( $code + $user->u_username );
+                $code = md5( $code + $code_factor );
             }
 
             $email = new IltEmailVallisations;
-            $email->i_id    = $id->getKey();
+            $email->i_id    = $id_key;
             $email->type    = $method;
+            $email->expires = date('Y-m-d',time() + (3 * 24 * 60 * 60));
             $email->code    = $code;
             $email->email   = input::get('email');
-            $email->expires = date('Y-m-d', time() + 3 * 24 * 3600);
+
             $email->save();
 
             $data = array(
-                'username'  => $user->u_username,
+                'username'  => is_string($user) ? $user : $user->u_username,
                 'group_name'=> $group->g_name,
                 'method'    => Config::get('fields.join_method.' . $method . '.zh_TW'),
                 'unit'      => Config::get('sites.name'),
@@ -505,6 +633,48 @@ class GroupController extends BaseController {
         }
 
         return $result;
+    }
+
+    public function delete($code){
+        $result = array();
+        try {
+            $group = IltGroup::get($code);
+            if($group->children()->count())
+                throw new Exception("有子群組的組織不能刪除！",1);
+
+            if(Input::get('code') != $code)
+                throw new Exception("請再輸入一次這個組織的簡稱",0);
+                
+            $group->ids()->each(function($e){
+                $e->delete();
+            });
+            $group->delete();
+            $result['success'] = true;
+            $result['message'] = "刪除成功！";
+            $result['url'] = route("user");
+        } catch (Exception $e) {
+            $result['success'] = false;
+            $result['message'] = $e->getMessage();
+            $result['status'] = 'danger';
+            if($e->getCode() == 0){
+                $result["form"] =  array(
+                    array(
+                        "type" => "hidden",
+                        "name" => "_token",
+                        "placeholder" => "",
+                        "value" => csrf_token(),
+                    ),
+                    array(
+                        "type" => "text",
+                        "name" => "code",
+                        "placeholder" => "簡稱",
+                        "value" => "",
+                    ),
+                );
+                $result['postURL'] = route("deleteGroup",$code);
+            }
+        }
+        return Response::json($result);
     }
 
 }

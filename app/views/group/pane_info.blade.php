@@ -13,5 +13,17 @@
         </tr>
       @endforeach
     </table>
+    @if(!$display_join)
+      @section('footer_scripts')
+        @parent
+        <script>
+          function leave_action(button){
+            interactive($(button).attr('href'));
+            return false;
+          }
+        </script>
+      @stop
+      <a href="{{ route('leave',array($code,$username)) }}" onclick="return leave_action(this)" class="btn btn-danger btn-block">離開群組</a>
+    @endif
   </div>
 </div>
