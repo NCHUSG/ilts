@@ -205,4 +205,12 @@ class IltIdentity extends Eloquent {
         return $this->hasOne('IltEmailVallisations','i_id');
     }
 
+    public function is_last_admin()
+    {
+        if($this->i_authority == Config::get('sites.i_authority_admin_value'))
+            return ($this->group()->first()->has_only_one_admin());
+        else
+            return false;
+    }
+
 }

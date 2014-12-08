@@ -306,10 +306,6 @@ class GroupController extends BaseController {
                 $page = 0;
             }
 
-            // var_dump($members);
-            // //var_dump($queries = DB::getQueryLog());
-            // die();
-
             $result = array(
                 'data' => $members,
                 'more' => $more,
@@ -348,12 +344,18 @@ class GroupController extends BaseController {
                 $leaving = false;
             $user = IltUser::fromUsername($username);
             $group = IltGroup::get($code);
+            $id = IltIdentity::get($user,$group);
+
+            if($id)
+                if($id->i_authority == Config::get('sites.i_authority_admin_value') && in_array($level, array("member","kick")))
+                    if($group->has_only_one_admin())
+                        throw new Exception("組織至少要保留一個管理員");
 
             if($level == "kick"){
                 if(Input::get("code") != $code)
                     throw new Exception("請再輸入一次這個組織的簡稱",-1);
             
-                IltIdentity::get($user,$group,true)->delete();
+                $id->del();
             }
             else
                 IltIdentity::establish($user,$group,$auth);
@@ -368,7 +370,6 @@ class GroupController extends BaseController {
                 'success' => false,
                 'message' => $e->getMessage(),
                 'status' => 'danger',
-                'refresh' => 2000,
             );
             if($e->getCode() == -1){
                 $result['form'] = array(
@@ -385,7 +386,6 @@ class GroupController extends BaseController {
                         "value" => "",
                     ),
                 );
-                unset($result['refresh']);
                 if($leaving)
                     $result['postURL'] = route("leave",array($code));
                 else
@@ -645,13 +645,16 @@ class GroupController extends BaseController {
             if(Input::get('code') != $code)
                 throw new Exception("請再輸入一次這個組織的簡稱",0);
                 
-            $group->ids()->each(function($e){
-                $e->delete();
+            $group->ids()->get()->each(function($ele){
+                $ele->delete();
             });
+
             $group->delete();
+
             $result['success'] = true;
             $result['message'] = "刪除成功！";
-            $result['url'] = route("user");
+            $result['redirect'] = route("user");
+            $result['refresh'] = 2000;
         } catch (Exception $e) {
             $result['success'] = false;
             $result['message'] = $e->getMessage();

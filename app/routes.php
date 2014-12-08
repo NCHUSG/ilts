@@ -70,7 +70,7 @@ Route::group(array('before' => 'auth_only'), function()
         Route::post('/group/join/{code}/{method}', array( 'uses' => 'GroupController@join', 'as' => 'join', 'before' => 'csrf'));
 
         Route::get('/group/leave/{code}', array( 'uses' => 'GroupController@perm', 'as' => 'leave'));
-        Route::post('/group/leave/{code}', array( 'uses' => 'GroupController@perm', 'as' => 'leave'));
+        Route::post('/group/leave/{code}', array( 'uses' => 'GroupController@perm', 'as' => 'leave', 'before' => 'csrf'));
 
         Route::group(array('before' => 'groupCreate'), function()
         {
@@ -81,16 +81,16 @@ Route::group(array('before' => 'auth_only'), function()
 
         Route::group(array('before' => 'groupAdmin'), function()
         {
-            Route::post('/group/ctrl/{code}/{type}', array( 'uses' => 'GroupController@ctrl', 'as' => 'groupCtrl'));
+            Route::post('/group/ctrl/{code}/{type}', array( 'uses' => 'GroupController@ctrl', 'as' => 'groupCtrl', 'before' => 'csrf'));
 
             Route::get('/group/invite/{code}', array( 'uses' => 'GroupController@invite', 'as' => 'invite'));
-            Route::post('/group/invite/{code}', array( 'uses' => 'GroupController@invite', 'as' => 'invite'));
+            Route::post('/group/invite/{code}', array( 'uses' => 'GroupController@invite', 'as' => 'invite', 'before' => 'csrf'));
 
             Route::get('/group/perm/{code}/{username}/{level}', array( 'uses' => 'GroupController@perm', 'as' => 'perm'));
-            Route::post('/group/perm/{code}/{username}/{level}', array( 'uses' => 'GroupController@perm', 'as' => 'perm'));
+            Route::post('/group/perm/{code}/{username}/{level}', array( 'uses' => 'GroupController@perm', 'as' => 'perm', 'before' => 'csrf'));
 
             Route::get('/group/delete/{code}', array( 'uses' => 'GroupController@delete', 'as' => 'deleteGroup'));
-            Route::post('/group/delete/{code}', array( 'uses' => 'GroupController@delete', 'as' => 'deleteGroup'));
+            Route::post('/group/delete/{code}', array( 'uses' => 'GroupController@delete', 'as' => 'deleteGroup', 'before' => 'csrf'));
         });
     });
 

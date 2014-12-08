@@ -18,7 +18,7 @@ class IltGroup extends Eloquent {
 
     public function ids()
     {
-        return $this->hasMany('IltIdentity', 'i_id','g_id');
+        return $this->hasMany('IltIdentity','g_id');
     }
 
     public static function get($code,$throwNotFoundException = false)
@@ -182,6 +182,11 @@ class IltGroup extends Eloquent {
     {
         $id = IltIdentity::get($user,$this);
         return $id->i_authority == Config::get('sites.i_authority_admin_value');
+    }
+
+    public function has_only_one_admin()
+    {
+        return ($this->ids()->where("i_authority",">=",Config::get('sites.i_authority_admin_value'))->count() == 1);
     }
 
 }

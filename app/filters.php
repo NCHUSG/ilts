@@ -112,10 +112,26 @@ Route::filter('auth_only', function()
     try {
         if (!IltUser::get()) {
             $current_uri = urlencode(Request::fullUrl());
-            return Redirect::to( action('PortalController@login') . '?callback=' . $current_uri);
+            if(Request::ajax()){
+                return Response::json(array(
+                    "message" => "您已經被登出，請重新登入！",
+                    "status" => "warning",
+                    "refresh" => 1000,
+                ));
+            }
+            else
+                return Redirect::to( action('PortalController@login') . '?callback=' . $current_uri);
         }
     } catch (Exception $e) {
-        return Redirect::route('logout');
+        if(Request::ajax()){
+            return Response::json(array(
+                "message" => "您的登入狀態已經失效，請重新登入！",
+                "status" => "danger",
+                "refresh" => 1000,
+            ));
+        }
+        else
+            return Redirect::route('logout');
     }
 });
 

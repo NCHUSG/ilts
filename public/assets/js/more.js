@@ -19,6 +19,17 @@ function more(wrapperSelector,callback){
         var panel,attr,section,panel_body;
         var g = r.data;
 
+        if(r.refresh){
+          var complete_interval = setInterval(function(){
+            if(r.redirect)
+              window.location = r.redirect;
+            else
+              location.reload();
+            console.log("reloading...");
+            clearInterval(complete_interval);
+          },r.refresh);
+        }
+
         for(var k in g){
           nothing = false;
           panel = sample.find('div.panel').clone();

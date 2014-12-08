@@ -7,7 +7,7 @@
   <div class="row">
     <div class="col-md-12 col-sm-12">
       <h1 class="text-center">伊爾特會員系統</h1>
-      <h2 class="text-center">填寫使用者註冊資料</h2>
+      <h2 class="text-center">填寫組織註冊資料</h2>
     </div>
   </div>
 
