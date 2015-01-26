@@ -1,6 +1,6 @@
 <?php
 return array(
-    
+
     //"base_url"   => "http://localhost/ilts_laravel/public/index.php/portal/o/auth",
     //在原本的 hybridauth 是需要設定 base_url 的，但是本項目會用 laravel 函式自動產生
 
@@ -14,7 +14,10 @@ return array(
          * 點選 "Create new Client ID" 申請網站 API key，
          *     "Application type" 選擇 "Web application"
          *     "Authorized JavaScript origins" 輸入 "網站所在的 domain"
-         *     "Authorized redirect URI" 輸入 "http://...網站所在.../public/index.php/portal/o/auth?hauth.done=Google"
+         *     "Authorized redirect URI" 輸入: (可透過換行允許多個 redirect URI)
+         *       http://...網站所在.../public/index.php/portal/o/auth?hauth.done=Google
+         *       http://...網站所在.../public/portal/o/auth?hauth.done=Google
+         *       http://...網站所在.../portal/o/auth?hauth.done=Google
          * 申請完畢之後，右方會多出一個 Client，內附 Client ID 以及 Client secret 等資訊
          *     將 Client ID 取代下方的 ID
          *     將 Client secret 取代下方的 SECRET
