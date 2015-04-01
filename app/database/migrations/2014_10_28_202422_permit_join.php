@@ -12,7 +12,25 @@ class PermitJoin extends Migration {
 	 */
 	public function up()
 	{
-		DB::statement('ALTER TABLE `ilt_identity_tags` MODIFY `u_id` INTEGER UNSIGNED NULL;');
+		// DB::statement('ALTER TABLE `ilt_identity_tags` MODIFY `u_id` INTEGER UNSIGNED NULL;');
+		Schema::table('ilt_identity_tags', function($table)
+		{
+		    $table->renameColumn('u_id', 'u_id_tmp');
+		});
+		Schema::table('ilt_identity_tags', function($table)
+		{
+			$table->integer('u_id')->unsigned()->nullable();
+		});
+		$ilt_identity_tags = DB::table('ilt_identity_tags')->select(['i_id','u_id_tmp'])->get();
+		foreach ($ilt_identity_tags as $i){
+			var_dump($i);
+			DB::table('ilt_identity_tags')->where('i_id', $i->i_id)->update(array('u_id' => $i->u_id_tmp));
+		}
+
+		Schema::table('ilt_identity_tags', function($table)
+		{
+			$table->dropColumn(array('u_id_tmp'));
+		});
 	}
 
 	/**
@@ -27,8 +45,7 @@ class PermitJoin extends Migration {
 		if($answer !== 'Y')
 			throw new Exception("Canceled by User");
 
-		DB::statement('DELETE FROM `ilt_identity_tags` WHERE `u_id` IS NULL;');
-		DB::statement('ALTER TABLE `ilt_identity_tags` MODIFY `u_id` INTEGER UNSIGNED NOT NULL;');
+		DB::table('ilt_identity_tags')->whereNull('u_id')->delete();
 	}
 
 }

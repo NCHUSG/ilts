@@ -11,3 +11,9 @@
 |
 */
 
+if (Config::get('database.default') === 'sqlite') {
+    $path = Config::get('database.connections.sqlite.database');
+    if (!file_exists($path) && is_dir(dirname($path))) {
+        touch($path);
+    }
+}
