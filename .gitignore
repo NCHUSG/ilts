@@ -4,6 +4,7 @@
 /app/config/database.php
 /app/config/hybridauth.php
 /app/config/mail.php
+/app/config/services.php
 /app/database/development.sqlite
 composer.phar
 composer.lock

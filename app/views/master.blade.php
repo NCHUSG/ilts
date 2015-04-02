@@ -75,7 +75,12 @@
   <script src="{{ asset('assets/js/jquery.1.11.0.min.js'); }}"></script>
   <script src="{{ asset('assets/bootstrap/3.0.3/js/bootstrap.min.js'); }}"></script>
 @show
-@if( isset($message) )
+<?php $from_session = false; ?>
+@if( isset($message) || $from_session = Session::has('message') )
+<?php
+    if($from_session){ $message = Session::get('message'); Session::forget('message'); }
+    if(is_string($message)) $message = ["content" => Session::get('message'), "status" => "warn"];
+?>
 <script>
   $(document).ready(function(){
     var message = "{{ $message['content'] }}";

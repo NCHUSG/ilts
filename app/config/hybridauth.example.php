@@ -15,13 +15,13 @@ return array(
          *     "Application type" 選擇 "Web application"
          *     "Authorized JavaScript origins" 輸入 "網站所在的 domain"
          *     "Authorized redirect URI" 輸入: (可透過換行允許多個 redirect URI)
-         *       http://...網站所在.../portal/o/auth?hauth.done=Google
-         *       https://...網站所在.../portal/o/auth?hauth.done=Google
+         *       http://...網站所在.../portal/o/auth/?hauth.done=Google
+         *       https://...網站所在.../portal/o/auth/?hauth.done=Google
          *       如果 Nginx 設定之根目錄不為 public 資料夾，則可能需要加入以下 URL
-         *       http://...網站所在.../public/index.php/portal/o/auth?hauth.done=Google
-         *       https://...網站所在.../public/index.php/portal/o/auth?hauth.done=Google
-         *       http://...網站所在.../public/portal/o/auth?hauth.done=Google
-         *       https://...網站所在.../public/portal/o/auth?hauth.done=Google
+         *       http://...網站所在.../public/index.php/portal/o/auth/?hauth.done=Google
+         *       https://...網站所在.../public/index.php/portal/o/auth/?hauth.done=Google
+         *       http://...網站所在.../public/portal/o/auth/?hauth.done=Google
+         *       https://...網站所在.../public/portal/o/auth/?hauth.done=Google
          * 申請完畢之後，右方會多出一個 Client，內附 Client ID 以及 Client secret 等資訊
          *     將 Client ID 取代下方的 ID
          *     將 Client secret 取代下方的 SECRET

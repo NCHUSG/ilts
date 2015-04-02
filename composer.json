@@ -4,9 +4,10 @@
 	"keywords": ["framework", "laravel"],
 	"license": "MIT",
 	"require": {
-		"laravel/framework": "4.1.*",
+		"laravel/framework": "4.2.*",
 		"hybridauth/hybridauth": "*",
-		"doctrine/dbal": "~2.3"
+		"doctrine/dbal": "~2.3",
+		"guzzlehttp/guzzle": "~4.0"
 	},
 	"autoload": {
 		"classmap": [

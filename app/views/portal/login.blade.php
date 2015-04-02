@@ -1,4 +1,4 @@
-@extends('portal.master')
+@extends('master')
 
 @section('content')
   <style type="text/css">

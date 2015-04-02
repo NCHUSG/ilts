@@ -59,8 +59,8 @@ class GroupController extends BaseController {
             $is_admin = $id->is_admin();
 
             if ($id->member_or_higher()) {
-                $data['display_subGroup'] = $this->toBool('allow_members_see_child_group') || $data['is_admin'];
-                $data['display_member'] = $this->toBool('allow_members_see_members') || $data['is_admin'];
+                $data['display_subGroup'] = $this->toBool('allow_members_see_child_group') || $is_admin;
+                $data['display_member'] = $this->toBool('allow_members_see_members') || $is_admin;
                 $data['display_create'] = $id->is_admin() || ($this->toBool('allow_member_create_child_group') && $id->is_member());
             }
             else{
@@ -313,6 +313,7 @@ class GroupController extends BaseController {
             );
 
         } catch (Exception $e) {
+            Log::error($e);
             $result['error'] = $e->getMessage();
         }
 
@@ -325,6 +326,7 @@ class GroupController extends BaseController {
             $result = 
                 $this->process_join_by_email($group,"");
         } catch (Exception $e) {
+            Log::error($e);
             $result['error'] = $e->getMessage();
         }
         return Response::json($result);
@@ -527,6 +529,7 @@ class GroupController extends BaseController {
                     break;
             }
         } catch (Exception $e) {
+            Log::error($e);
             $result['error'] = $e->getMessage();
         }
         return Response::json($result);

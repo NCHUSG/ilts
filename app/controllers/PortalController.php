@@ -40,8 +40,9 @@ class PortalController extends BaseController {
                 Hybrid_Endpoint::process();
             }
             catch (Exception $e) {
-                // redirect back to http://URL/social/
-                return Redirect::route('provider');
+                Log::error($e);
+                Session::set("message","登入過程出了點問題，請稍候重試");
+                return Redirect::route("logout");
             }
             return;
         }
@@ -54,31 +55,33 @@ class PortalController extends BaseController {
             if ( !in_array($provider, $providers))
                 throw new Exception("invalid provider!", 1);
 
-            $hybridauth_config['base_url'] = route("provider","auth");
+            $hybridauth_config['base_url'] = route("provider","auth") . "/";
 
             // create a HybridAuth object
             $socialAuth = new Hybrid_Auth($hybridauth_config);
             // authenticate with Google
-            $provider = $socialAuth->authenticate($provider);
+            $social_provider = $socialAuth->authenticate($provider);
             // fetch user profile
             $userProfile = $provider->getUserProfile();
 
         }
         catch(Exception $e) {
-            // exception codes can be found on HybBridAuth's web site
-            return $e->getMessage();
+            Log::error($e);
+            Session::set("message","登入過程出了點問題，請稍候重試...");
+            if(isset($social_provider)) $social_provider->logout();
+            return Redirect::route("logout");
         }
 
         // access user profile data
         $oauth = array(
                     'status'    => true,
-                    'provider'  => $provider->id,
+                    'provider'  => $social_provider->id,
                     'user'      => (object) (array) $userProfile);
 
         Session::put('oauth', $oauth);
 
         // logout
-        $provider->logout();
+        $social_provider->logout();
         return Redirect::action('PortalController@login_process');
     }
 
