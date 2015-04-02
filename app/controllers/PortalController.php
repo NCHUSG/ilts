@@ -62,7 +62,7 @@ class PortalController extends BaseController {
             // authenticate with Google
             $social_provider = $socialAuth->authenticate($provider);
             // fetch user profile
-            $userProfile = $provider->getUserProfile();
+            $userProfile = $social_provider->getUserProfile();
 
         }
         catch(Exception $e) {
