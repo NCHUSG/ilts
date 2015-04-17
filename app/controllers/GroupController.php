@@ -357,7 +357,7 @@ class GroupController extends BaseController {
                 if(Input::get("code") != $code)
                     throw new Exception("請再輸入一次這個組織的簡稱",-1);
             
-                $id->del();
+                $id->delete();
             }
             else
                 IltIdentity::establish($user,$group,$auth);
