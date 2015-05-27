@@ -118,9 +118,10 @@
 ),
 
 'oauth_scope_id' => array(
-    'user.isMemberOf.'  => '可以取得使用者是否為 {group} 的成員',
-    'user.isAdminOf.'  => '可以取得使用者是否為 {group} 的管理員',
-    'user.isPendingOf.'  => '可以取得使用者是否為 {group} 的待核准成員',
+    'user.isIn.'        => '可以取得使用者是否為 {group} 的成員(一般成員或是管理員)',
+    'user.isMemberOf.'  => '可以取得使用者是否為 {group} 的成員(一般成員)',
+    'user.isAdminOf.'   => '可以取得使用者是否為 {group} 的管理員',
+    'user.isPendingOf.' => '可以取得使用者是否為 {group} 的待核准成員',
 ),
 ```
 
